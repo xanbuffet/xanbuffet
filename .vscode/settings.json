@@ -1,23 +1,30 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
   "editor.formatOnPaste": false,
   "eslint.validate": ["javascript", "vue", "typescript"],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "javascript.preferences.quoteStyle": "single",
-  "typescript.preferences.quoteStyle": "single",
+  "javascript.preferences.quoteStyle": "double",
+  "typescript.preferences.quoteStyle": "double",
   "[javascript]": {
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
     "editor.insertSpaces": true
   },
   "[typescript]": {
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
     "editor.insertSpaces": true
   },
   "[vue]": {
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
     "editor.insertSpaces": true
-  }
+  },
+  "npm-intellisense.importQuotes": "\"",
+  "prettier.jsxSingleQuote": false,
+  "typescript.format.semicolons": "insert",
+  "prettier.tabWidth": 4,
+  "prettier.useTabs": true,
+  "eslint.useFlatConfig": true,
+  "prettier.printWidth": 200
 }
