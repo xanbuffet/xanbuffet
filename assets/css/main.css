@@ -3,4 +3,5 @@
 
 @theme {
   --font-sans: "Montserrat", sans-serif;
+  --ui-header-height: --spacing(16);
 }
