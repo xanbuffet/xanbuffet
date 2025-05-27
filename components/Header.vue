@@ -62,6 +62,11 @@ const items = ref<NavigationMenuItem[]>([
 		to: "/order",
 	},
 	{
+		label: "Địa chỉ",
+		icon: "i-lucide-map-pin",
+		to: "/address",
+	},
+	{
 		label: "TikTok",
 		icon: "i-logos-tiktok-icon",
 		to: "https://tiktok.com/@xanbuffetcomnha35k",
@@ -87,7 +92,7 @@ const items = ref<NavigationMenuItem[]>([
 					:items="items"
 					variant="link"
 					:ui="{
-						list: 'flex gap-x-2 justify-center',
+						list: 'flex gap-x-1.5 justify-center',
 					}"
 					class="w-full justify-center"
 				/>
