@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const items = ref<NavigationMenuItem[]>([
@@ -79,6 +80,8 @@ const items = ref<NavigationMenuItem[]>([
 		target: "_blank",
 	},
 ]);
+
+const open = ref(false);
 </script>
 
 <template>
@@ -107,9 +110,20 @@ const items = ref<NavigationMenuItem[]>([
 				<UButton
 					class="inline-flex lg:hidden"
 					variant="subtle"
-					icon="lucide:align-justify"
+					icon="i-lucide-align-justify"
+					@click="open = true"
 				/>
 			</div>
+			<USlideover
+				v-model:open="open"
+				class="w-80"
+				title="Xan buffet cơm nhà 35k"
+				close-icon="lucide:circle-x"
+			>
+				<template #body>
+					<p>Content of the slideover</p>
+				</template>
+			</USlideover>
 		</nav>
 	</header>
 </template>

@@ -13,11 +13,7 @@
 					to="/"
 					class="inline-flex items-center gap-2"
 				>
-					<img
-						src="logoUrl"
-						alt="Logo"
-						class="object-contain h-10"
-					>
+					XAN LOGO
 				</NuxtLink>
 				<p class="mt-4 text-sm text-gray-700 xl:max-w-md">
 					Website description
