@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-	modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/ui"],
+	modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/ui", "nuxt-swiper"],
 	ssr: true,
 
 	devtools: { enabled: false },
@@ -31,13 +31,17 @@ export default defineNuxtConfig({
 	},
 
 	image: {
-		provider: "static", // Sử dụng provider local cho tài nguyên tĩnh
-		domains: ["<laravel_api_domain>"], // Cho phép tải hình ảnh từ Laravel API
-		dir: "public", // Thư mục chứa hình ảnh tĩnh
-		// Nếu dùng Cloudinary (tùy chọn):
-		// provider: 'cloudinary',
-		// cloudinary: {
-		//   baseURL: 'https://res.cloudinary.com/<your_cloud_name>',
-		// },
+		format: ["webp, png, jpg"],
+		dir: "public",
+		provider: "none",
+		domains: [
+			"images.unsplash.com",
+			"res.cloudinary.com",
+			"gravatar.com",
+			"admin.xanbuffet.com",
+		],
+		alias: {
+			unsplash: "https://images.unsplash.com",
+		},
 	},
 });

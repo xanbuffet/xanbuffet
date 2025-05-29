@@ -30,5 +30,6 @@
 	"prettier.tabWidth": 4,
 	"prettier.useTabs": true,
 	"eslint.useFlatConfig": true,
-	"prettier.printWidth": 200
+	"prettier.printWidth": 200,
+	"tailwindCSS.experimental.configFile": "./assets/css/main.css",
 }

@@ -8,7 +8,7 @@
 	/>
 	<UContainer>
 		<div class="flex flex-wrap justify-between gap-12 md:gap-24 py-8 lg:py-12 border-b border-default">
-			<div class="mr-auto">
+			<div class="mr-auto w-full md:w-3/7 lg:w-auto">
 				<NuxtLink
 					to="/"
 					class="inline-flex items-center gap-2"

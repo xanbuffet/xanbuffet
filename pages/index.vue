@@ -1,5 +1,8 @@
 <script setup></script>
 
 <template>
-	<div>Hello word</div>
+	<div>
+		<HeroSection />
+		<div>Hello word</div>
+	</div>
 </template>
