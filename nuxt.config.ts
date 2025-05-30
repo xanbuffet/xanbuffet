@@ -8,8 +8,7 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 		public: {
-			apiBase:
-				process.env.NUXT_API_URL || "https://admin.xanbuffet.com/api",
+			apiBaseUrl: process.env.API_BASE_URL || "https://localhost:8000",
 		},
 	},
 	compatibilityDate: "2025-05-25",
