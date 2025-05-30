@@ -6,20 +6,11 @@ const slides = ref([
 	{ src: "/images/slide3.jpg", caption: "16 món tự chọn" },
 ]);
 const swiper = useSwiper(containerRef, {
-	effect: "creative",
+	effect: "fade",
 	loop: true,
 	autoplay: {
 		delay: 3500,
 		disableOnInteraction: false,
-	},
-	creativeEffect: {
-		prev: {
-			shadow: true,
-			translate: [0, 0, -400],
-		},
-		next: {
-			translate: ["100%", 0, 0],
-		},
 	},
 });
 onMounted(() => {
@@ -41,7 +32,7 @@ onMounted(() => {
 					<NuxtImg
 						:src="slide.src"
 						:alt="slide.caption"
-						class="w-full h-auto max-h-[70vh] aspect-video md:aspect-auto object-cover blur-2xs"
+						class="w-full h-auto max-h-[70vh] object-cover blur-2xs"
 						:placeholder="true"
 						quality="80"
 						format="webp"
