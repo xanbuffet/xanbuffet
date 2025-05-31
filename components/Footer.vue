@@ -32,7 +32,7 @@
 						Về chúng tôi
 					</ULink>
 					<ULink
-						to="/careers"
+						to="/"
 						class="py-1.5 block hover:text-primary"
 						inactive-class="text-default"
 					>

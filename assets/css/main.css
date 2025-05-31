@@ -6,3 +6,13 @@
   --ui-header-height: --spacing(16);
   --blur-2xs: 2px;
 }
+
+.tabs-scrollable {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior: contain auto;
+}
