@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import type { StepperItem, TabsItem } from "@nuxt/ui";
+import type { StepperItem } from "@nuxt/ui";
 
 interface Dish {
 	id: number;
 	name: string;
-	image: string | null;
+	image: string | undefined;
 	created_at: string;
 	updated_at: string;
 	selected: boolean;
+}
+interface MenuResponse {
+	data: {
+		status: string;
+		dishes: Dish[];
+	};
+}
+interface SimpleTab {
+	value: number;
+	label: string;
 }
 
 const toast = useToast();
@@ -36,10 +46,11 @@ const steps: StepperItem[] = [
 	},
 ];
 const stepper = useTemplateRef("stepper");
+const activeStep = ref<number>(1);
 
-const activeTab = ref<number>(1);
-const sets = ref<TabsItem[]>([{ value: 1, label: "Suất 1" }]);
-const menu = ref<Dish[]>();
+const activeSet = ref<number>(1);
+const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
+const menu = ref<Dish[]>([]);
 const dishesOfSet = ref<Dish[][]>([]);
 
 const getDayOfWeek = () => {
@@ -50,7 +61,7 @@ const getDayOfWeek = () => {
 const fetchMenu = async () => {
 	const dayOfWeek = getDayOfWeek();
 	try {
-		const response = await $fetch(`${apiBaseUrl}/api/menu/${dayOfWeek}`);
+		const response = await $fetch<MenuResponse>(`${apiBaseUrl}/api/menu/${dayOfWeek}`);
 		menu.value = response.data.dishes.map(dish => ({
 			id: dish.id,
 			name: dish.name,
@@ -64,19 +75,21 @@ const fetchMenu = async () => {
 	catch (err) {
 		console.error("Error fetching menu:", err);
 		let errorMessage = "Không thể tải thực đơn. Vui lòng thử lại sau.";
-		if (err.status === 404) {
-			errorMessage = "Không tìm thấy thực đơn cho ngày này.";
+		if (typeof err === "object" && err !== null && "status" in err) {
+			if (err.status === 404) {
+				errorMessage = "Không tìm thấy thực đơn cho ngày này.";
+			}
+			else if (err.status === 500) {
+				errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
+			}
+			error.value = errorMessage;
+			toast.add({
+				title: "Uh oh! Có lỗi xảy ra.",
+				description: errorMessage,
+				icon: "i-lucide-wifi",
+				color: "error",
+			});
 		}
-		else if (err.status === 500) {
-			errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
-		}
-		error.value = errorMessage;
-		toast.add({
-			title: "Uh oh! Có lỗi xảy ra.",
-			description: errorMessage,
-			icon: "i-lucide-wifi",
-			color: "error",
-		});
 	}
 	finally {
 		loading.value = false;
@@ -87,29 +100,77 @@ onMounted(() => {
 	fetchMenu();
 });
 
-const onAddTab = () => {
-	const maxValue = sets.value.length > 0 ? Math.max(...sets.value.map(tab => tab.value)) : null;
+const onAddSet = () => {
+	const values = sets.value.map(tab => Number(tab.value)).filter(v => !isNaN(v));
+	const maxValue = sets.value.length > 0 ? Math.max(...values) : 0;
 	const newTabIndex = maxValue + 1;
 
 	sets.value.push({ value: newTabIndex, label: `Suất ${newTabIndex}` });
 
-	activeTab.value = newTabIndex;
+	activeSet.value = newTabIndex;
 
 	if (menu.value.length > 0) {
-		dishesOfSet.value[newTabIndex] = menu.value.map(dish => ({ ...dish }));
+		dishesOfSet.value[newTabIndex] = menu.value.map(dish => ({ ...dish, selected: false }));
 	}
 };
-const onRemoveTab = (value: number) => {
+const onRemoveSet = (value: number | string | undefined) => {
 	if (sets.value.length <= 1) return;
 
 	const newTabs = sets.value.filter(tab => tab.value !== value);
 	sets.value = newTabs;
 
-	activeTab.value = sets.value[0].value;
+	activeSet.value = Number(sets.value[0].value);
 };
-const onSelectDish = (dish: Dish, set: number) => {
+const selectedDishesOfSet = computed(() => {
+	const result: Record<number, Dish[]> = {};
+	Object.keys(dishesOfSet.value).forEach((setValue) => {
+		const setIndex = Number(setValue);
+		result[setIndex] = dishesOfSet.value[setIndex].filter(dish => dish.selected);
+	});
+	return result;
+});
+const onSelectDish = (dish: Dish, set: number | string | undefined) => {
 	console.log(`Selected dish: ${dish.name} for set ${set}`);
-	dish.selected = !dish.selected;
+
+	if (set === undefined || set === null) return;
+	set = Number(set);
+
+	const selected = selectedDishesOfSet.value[set] || [];
+	const index: number = selected.findIndex((d: Dish) => d.id === dish.id);
+	if (index > -1) {
+		selected.splice(index, 1);
+		dish.selected = false;
+	}
+	else {
+		if (selected.length >= 6) {
+			toast.add({
+				title: "Oh! Giới hạn món.",
+				description: "Mỗi suất chỉ được chọn tối đa 6 món.",
+				icon: "i-lucide-message-circle-warning",
+				color: "warning",
+			});
+			return;
+		}
+		selected.push(dish);
+		dish.selected = true;
+	}
+
+	selectedDishesOfSet.value[set] = [...selected];
+};
+const onNextStep = () => {
+	if (stepper.value?.hasNext && activeStep.value === 0) {
+		const allTabsValid = Object.values(selectedDishesOfSet.value).every(dishes => dishes.length >= 3);
+		if (!allTabsValid) {
+			toast.add({
+				title: "Oh! Chưa chọn đủ món.",
+				description: "Mỗi suất cần chọn ít nhất 3 món.",
+				icon: "i-lucide-alert-triangle",
+				color: "warning",
+			});
+			return;
+		}
+		stepper.value.next();
+	}
 };
 </script>
 
@@ -128,26 +189,28 @@ const onSelectDish = (dish: Dish, set: number) => {
 			<section class="my-5 lg:my-10">
 				<UStepper
 					ref="stepper"
+					v-model="activeStep"
 					disabled
 					:items="steps"
 				>
 					<template #shopping>
 						<UButton
+							class="mb-2 md:mb-4"
 							icon="i-lucide-plus"
 							color="warning"
 							size="sm"
 							variant="subtle"
-							@click.prevent="onAddTab"
+							@click.prevent="onAddSet"
 						>
 							Thêm suất
 						</UButton>
 						<UTabs
-							v-model="activeTab"
+							v-model="activeSet"
 							:items="sets"
 							variant="link"
 							:ui="{
 								list: 'tabs-scrollable',
-								trigger: 'flex-none -bottom-0 text-sm md:text-base border-r',
+								trigger: 'flex-none -bottom-0 text-sm md:text-base rounded-none rounded-tr-lg border-r',
 								indicator: '-bottom-0',
 							}"
 						>
@@ -155,7 +218,7 @@ const onSelectDish = (dish: Dish, set: number) => {
 								<UIcon
 									name="i-heroicons-x-mark"
 									class="ml-1 cursor-pointer hover:text-error size-4"
-									@click.stop="onRemoveTab(item.value)"
+									@click.stop="onRemoveSet(item.value)"
 								/>
 							</template>
 							<template #content="{ item }">
@@ -177,7 +240,7 @@ const onSelectDish = (dish: Dish, set: number) => {
 									class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 my-5 md:my-8"
 								>
 									<div
-										v-for="dish in dishesOfSet[activeTab]"
+										v-for="dish in dishesOfSet[activeSet]"
 										:key="dish.id"
 									>
 										<UCard :ui="{ body: 'relative flex flex-col flex-1 gap-y-2 md:gap-y-4 p-0 sm:p-0 rounded-lg' }">
@@ -194,8 +257,9 @@ const onSelectDish = (dish: Dish, set: number) => {
 												{{ dish.name }}
 											</div>
 											<UButton
-												:variant="dish.selected ? 'outlined' : 'solid'"
-												:color="dish.selected ? 'neutral' : 'primary'"
+												:variant="dish.selected ? 'solid' : 'outline'"
+												color="primary"
+												size="lg"
 												class="w-full rounded-b-lg rounded-t-none items-center justify-center"
 												@click.prevent="onSelectDish(dish, item.value)"
 											>
@@ -216,22 +280,28 @@ const onSelectDish = (dish: Dish, set: number) => {
 						Confirm
 					</template>
 				</UStepper>
-				<div class="flex gap-2 justify-between mt-4">
-					<UButton
-						leading-icon="i-lucide-arrow-left"
-						:disabled="!stepper?.hasPrev"
-						@click="stepper?.prev()"
-					>
-						Quay lại
-					</UButton>
-
-					<UButton
-						trailing-icon="i-lucide-arrow-right"
-						:disabled="!stepper?.hasNext"
-						@click="stepper?.next()"
-					>
-						Tiếp
-					</UButton>
+				<div class="w-full bg-default fixed bottom-0 left-0 right-0 z-20 border-t border-default shadow-md">
+					<div class="max-w-(--ui-container) mx-auto flex justify-between px-4 sm:px-6 lg:px-8 py-4">
+						<UButton
+							variant="outline"
+							leading-icon="i-lucide-arrow-left"
+							:disabled="!stepper?.hasPrev"
+							@click="stepper?.prev()"
+						>
+							Quay lại
+						</UButton>
+						<div class="flex flex-col md:flex-row gap-x-2 text-center text-sm md:text-base">
+							<p>Suất {{ activeSet }}:</p>
+							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
+						</div>
+						<UButton
+							trailing-icon="i-lucide-arrow-right"
+							:disabled="!stepper?.hasNext"
+							@click="onNextStep"
+						>
+							Tiếp
+						</UButton>
+					</div>
 				</div>
 			</section>
 		</div>
