@@ -13,6 +13,8 @@ interface Dish {
 const toast = useToast();
 const config = useRuntimeConfig();
 const apiBaseUrl = config.public.apiBaseUrl;
+const loading = ref<boolean>(true);
+const error = ref<string>("");
 
 const openAlert = ref(true);
 
@@ -35,9 +37,10 @@ const steps: StepperItem[] = [
 ];
 const stepper = useTemplateRef("stepper");
 
-const activeTab = ref<string>("1");
-const meals = ref<TabsItem[]>([{ value: "1", label: "Suất 1" }]);
-const dishesOfMeal = ref<Dish[]>([]);
+const activeTab = ref<number>(1);
+const sets = ref<TabsItem[]>([{ value: 1, label: "Suất 1" }]);
+const menu = ref<Dish[]>();
+const dishesOfSet = ref<Dish[][]>([]);
 
 const getDayOfWeek = () => {
 	const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -46,61 +49,67 @@ const getDayOfWeek = () => {
 };
 const fetchMenu = async () => {
 	const dayOfWeek = getDayOfWeek();
-	const { data, pending, error } = await useFetch(`${apiBaseUrl}/api/menu/${dayOfWeek}`, {
-		transform: (response: any) => {
-			return response.dishes.map((dish: any) => ({
-				id: dish.id,
-				name: dish.name,
-				image: dish.image,
-				created_at: dish.created_at,
-				updated_at: dish.updated_at,
-				selected: false,
-			}));
-		},
-	});
-
-	if (data.value) {
-		dishesOfMeal.value = data.value;
+	try {
+		const response = await $fetch(`${apiBaseUrl}/api/menu/${dayOfWeek}`);
+		menu.value = response.data.dishes.map(dish => ({
+			id: dish.id,
+			name: dish.name,
+			image: "https://placehold.co/800x800.png?text=Dish",
+			created_at: dish.created_at,
+			updated_at: dish.updated_at,
+			selected: false,
+		}));
+		dishesOfSet.value[1] = menu.value;
 	}
-
-	if (error.value) {
-		console.error("Error fetching menu:", error.value);
+	catch (err) {
+		console.error("Error fetching menu:", err);
+		let errorMessage = "Không thể tải thực đơn. Vui lòng thử lại sau.";
+		if (err.status === 404) {
+			errorMessage = "Không tìm thấy thực đơn cho ngày này.";
+		}
+		else if (err.status === 500) {
+			errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
+		}
+		error.value = errorMessage;
 		toast.add({
 			title: "Uh oh! Có lỗi xảy ra.",
-			description: "Không thể tải thực đơn. Vui lòng thử lại sau.",
+			description: errorMessage,
 			icon: "i-lucide-wifi",
 			color: "error",
 		});
+	}
+	finally {
+		loading.value = false;
 	}
 };
 
 onMounted(() => {
 	fetchMenu();
-	console.log("Mounted and fetching menu for the day:", getDayOfWeek());
 });
 
 const onAddTab = () => {
-	const maxValue = meals.value.length > 0 ? Math.max(...meals.value.map(tab => Number(tab.value))) : null;
+	const maxValue = sets.value.length > 0 ? Math.max(...sets.value.map(tab => tab.value)) : null;
 	const newTabIndex = maxValue + 1;
 
-	meals.value.push({ value: String(newTabIndex), label: `Suất ${newTabIndex}` });
+	sets.value.push({ value: newTabIndex, label: `Suất ${newTabIndex}` });
 
-	activeTab.value = String(newTabIndex);
+	activeTab.value = newTabIndex;
 
-	// if (menu.value.dishes?.length) {
-	//     dishesByTab.value[newTabIndex] = menu.value.dishes.map((dish) => ({
-	//         ...dish,
-	//         selected: false,
-	//     }));
-	// }
+	if (menu.value.length > 0) {
+		dishesOfSet.value[newTabIndex] = menu.value.map(dish => ({ ...dish }));
+	}
 };
-const onRemoveTab = (value: string) => {
-	if (meals.value.length <= 1) return;
+const onRemoveTab = (value: number) => {
+	if (sets.value.length <= 1) return;
 
-	const newTabs = meals.value.filter(tab => tab.value !== value);
-	meals.value = newTabs;
+	const newTabs = sets.value.filter(tab => tab.value !== value);
+	sets.value = newTabs;
 
-	activeTab.value = meals.value[0].value;
+	activeTab.value = sets.value[0].value;
+};
+const onSelectDish = (dish: Dish, set: number) => {
+	console.log(`Selected dish: ${dish.name} for set ${set}`);
+	dish.selected = !dish.selected;
 };
 </script>
 
@@ -134,11 +143,11 @@ const onRemoveTab = (value: string) => {
 						</UButton>
 						<UTabs
 							v-model="activeTab"
-							:items="meals"
+							:items="sets"
 							variant="link"
 							:ui="{
 								list: 'tabs-scrollable',
-								trigger: 'flex-none -bottom-0 text-sm md:text-base',
+								trigger: 'flex-none -bottom-0 text-sm md:text-base border-r',
 								indicator: '-bottom-0',
 							}"
 						>
@@ -150,7 +159,51 @@ const onRemoveTab = (value: string) => {
 								/>
 							</template>
 							<template #content="{ item }">
-								<p>Nội dung của {{ item.label }}</p>
+								<div
+									v-if="loading || error !== ''"
+									class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+								>
+									<div
+										v-for="n in 6"
+										:key="n"
+										class="space-y-2"
+									>
+										<USkeleton class="w-full h-48 rounded" />
+										<USkeleton class="w-3/4 h-6 rounded" />
+									</div>
+								</div>
+								<div
+									v-else
+									class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 my-5 md:my-8"
+								>
+									<div
+										v-for="dish in dishesOfSet[activeTab]"
+										:key="dish.id"
+									>
+										<UCard :ui="{ body: 'relative flex flex-col flex-1 gap-y-2 md:gap-y-4 p-0 sm:p-0 rounded-lg' }">
+											<NuxtImg
+												placeholder
+												:src="dish.image"
+												:alt="dish.name"
+												preload
+												loading="lazy"
+												fit="cover"
+												class="rounded-t-lg"
+											/>
+											<div class="min-h-12 shrink px-2 flex-1 md:font-semibold">
+												{{ dish.name }}
+											</div>
+											<UButton
+												:variant="dish.selected ? 'outlined' : 'solid'"
+												:color="dish.selected ? 'neutral' : 'primary'"
+												class="w-full rounded-b-lg rounded-t-none items-center justify-center"
+												@click.prevent="onSelectDish(dish, item.value)"
+											>
+												{{ dish.selected ? "Đã chọn" : "Chọn" }}
+											</UButton>
+										</UCard>
+									</div>
+								</div>
 							</template>
 						</UTabs>
 					</template>
