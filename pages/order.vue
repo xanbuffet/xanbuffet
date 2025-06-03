@@ -98,6 +98,9 @@ const fetchMenu = async () => {
 
 onMounted(() => {
 	fetchMenu();
+	setTimeout(() => {
+		openAlert.value = false;
+	}, 6000);
 });
 
 const onAddSet = () => {
@@ -186,7 +189,7 @@ const onNextStep = () => {
 				close
 				@update:open="openAlert = false"
 			/>
-			<section class="my-5 lg:my-10">
+			<section class="my-5 lg:my-8">
 				<UStepper
 					ref="stepper"
 					v-model="activeStep"
@@ -273,7 +276,28 @@ const onNextStep = () => {
 					</template>
 
 					<template #info>
-						Info
+						<div class="flex flex-col md:flex-row gap-y-2">
+							<div class="flex-1 flex items-center justify-center">
+								<div class="p-2 md:p-4 w-sm">
+									<LoginForm />
+								</div>
+							</div>
+							<USeparator
+								orientation="vertical"
+								label="Hoặc"
+								class="hidden md:flex h-60"
+							/>
+							<USeparator
+								orientation="horizontal"
+								label="Hoặc"
+								class="flex md:hidden w-full"
+							/>
+							<div class="flex-1 flex items-center justify-center">
+								<div class="p-2 md:p-4 w-sm">
+									<SignupForm />
+								</div>
+							</div>
+						</div>
 					</template>
 
 					<template #confirm>
