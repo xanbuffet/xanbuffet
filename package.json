@@ -14,16 +14,21 @@
   "dependencies": {
     "@nuxt/image": "^1.10.0",
     "@nuxt/ui": "^3.1.2",
+    "@pinia/nuxt": "^0.11.1",
     "nuxt": "^3.17.4",
     "nuxt-swiper": "^2.0.1",
+    "pinia": "^3.0.3",
+    "pinia-plugin-persistedstate": "^4.3.0",
     "vue": "^3.5.14",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@iconify-json/lucide": "^1.2.45",
     "@nuxt/eslint": "^1.4.1",
     "eslint": "^9.27.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
-    "vite-plugin-eslint2": "^5.0.3"
+    "vite-plugin-eslint2": "^5.0.3",
+    "vue-tsc": "^2.2.10"
   }
 }

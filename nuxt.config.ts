@@ -1,8 +1,8 @@
 export default defineNuxtConfig({
-	modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/ui", "nuxt-swiper"],
+	modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/ui", "nuxt-swiper", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt"],
 	ssr: true,
 
-	devtools: { enabled: true },
+	devtools: { enabled: false },
 
 	css: ["~/assets/css/main.css"],
 
@@ -15,6 +15,10 @@ export default defineNuxtConfig({
 
 	nitro: {
 		preset: "node-server",
+	},
+	typescript: {
+		typeCheck: true,
+		strict: true,
 	},
 
 	eslint: {
