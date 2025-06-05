@@ -5,8 +5,6 @@ interface Dish {
 	id: number;
 	name: string;
 	image: string | undefined;
-	created_at: string;
-	updated_at: string;
 	selected: boolean;
 }
 interface MenuResponse {
@@ -47,7 +45,7 @@ const steps: StepperItem[] = [
 	},
 ];
 const stepper = useTemplateRef("stepper");
-const activeStep = ref<number>(1);
+const activeStep = ref<number>(0);
 const activeSet = ref<number>(1);
 const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
 const menu = ref<Dish[]>([]);
@@ -61,13 +59,15 @@ const getDayOfWeek = () => {
 const fetchMenu = async () => {
 	const dayOfWeek = getDayOfWeek();
 	try {
-		const response = await $fetch<MenuResponse>(`${apiBaseUrl}/api/menu/${dayOfWeek}`);
+		const response = await $fetch<MenuResponse>(`${apiBaseUrl}/api/menus/${dayOfWeek}`, {
+			headers: {
+				Accept: "application/json",
+			},
+		});
 		menu.value = response.data.dishes.map(dish => ({
 			id: dish.id,
 			name: dish.name,
-			image: "https://placehold.co/800x800.png?text=Dish",
-			created_at: dish.created_at,
-			updated_at: dish.updated_at,
+			image: dish.image,
 			selected: false,
 		}));
 		dishesOfSet.value[1] = menu.value;
@@ -139,10 +139,12 @@ const onSelectDish = (dish: Dish, set: number | string | undefined) => {
 	set = Number(set);
 
 	const selected = selectedDishesOfSet.value[set] || [];
+	console.log("selected: ", selected);
 	const index: number = selected.findIndex((d: Dish) => d.id === dish.id);
 	if (index > -1) {
 		selected.splice(index, 1);
 		dish.selected = false;
+		console.log("index: ", index);
 	}
 	else {
 		if (selected.length >= 6) {
@@ -264,7 +266,7 @@ const onNextStep = () => {
 												:variant="dish.selected ? 'solid' : 'outline'"
 												color="primary"
 												size="lg"
-												class="w-full rounded-b-lg rounded-t-none items-center justify-center"
+												class="w-full rounded-b-lg rounded-t-none items-center justify-center hover:cursor-pointer"
 												@click.prevent="onSelectDish(dish, item.value)"
 											>
 												{{ dish.selected ? "Đã chọn" : "Chọn" }}
@@ -306,7 +308,7 @@ const onNextStep = () => {
 							v-else
 							class="max-w-md mx-auto space-y-4  my-4 md:my-8"
 						>
-							<h4 class="mb-3 md:mb-5 text-center">
+							<h4 class="mb-5 md:mb-8 text-center">
 								<p class="uppercase text-lg md:text-xl font-semibold">
 									Thông Tin Nhận Hàng
 								</p>
@@ -340,7 +342,7 @@ const onNextStep = () => {
 								/>
 							</UFormField>
 							<UFormField
-								label="Địa chỉ"
+								label="Địa chỉ nhận hàng"
 								name="address"
 								required
 							>
