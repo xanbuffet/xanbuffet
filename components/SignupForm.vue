@@ -1,6 +1,11 @@
 <script setup lang="ts">
+const props = defineProps({
+	redirectUrl: String,
+});
+
 const router = useRouter();
 const toast = useToast();
+const user = useUserStore();
 
 interface SignupForm {
 	name: string;
@@ -49,11 +54,14 @@ const onSignup = async (): Promise<void> => {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
 		});
-		localStorage.setItem("token", response.data.token);
-		localStorage.setItem("name", response.data.name);
-		localStorage.setItem("username", response.data.username);
-		localStorage.setItem("is_admin", response.data.is_admin.toString());
-		router.push("/dashboard");
+		user.setUser({
+			name: response.data.name,
+			username: response.data.username,
+			address: response.data.address,
+			is_admin: response.data.is_admin,
+			token: response.data.token,
+		});
+		router.push(props.redirectUrl ?? "/order");
 	}
 	catch (err) {
 		const fetchError = err as { data?: ApiError };
@@ -73,8 +81,13 @@ const onSignup = async (): Promise<void> => {
 
 <template>
 	<div>
-		<h4 class="uppercase text-lg md:text-xl font-semibold mb-2 md:mb-4 text-center">
-			Đăng Ký
+		<h4 class="mb-3 md:mb-5 text-center">
+			<p class="uppercase text-lg md:text-xl font-semibold">
+				Đăng Ký
+			</p>
+			<p class="text-muted text-sm font-normal">
+				Nhận nhiều ưu đãi khi đăng ký thành viên
+			</p>
 		</h4>
 		<p
 			v-if="error"
@@ -92,10 +105,10 @@ const onSignup = async (): Promise<void> => {
 				required
 			>
 				<UInput
+					v-model="form.name"
 					type="text"
 					variant="soft"
 					class="w-full"
-					autocomplete="tel"
 					placeholder="Nhập tên của bạn"
 				/>
 			</UFormField>
@@ -105,6 +118,7 @@ const onSignup = async (): Promise<void> => {
 				required
 			>
 				<UInput
+					v-model="form.username"
 					type="tel"
 					variant="soft"
 					class="w-full"
@@ -119,6 +133,7 @@ const onSignup = async (): Promise<void> => {
 			>
 				<UInput
 					v-model="form.password"
+					placeholder="Nhập mật khẩu"
 					variant="soft"
 					class="w-full"
 					:type="showPw ? 'text' : 'password'"
@@ -145,6 +160,7 @@ const onSignup = async (): Promise<void> => {
 			>
 				<UInput
 					v-model="form.password_confirmation"
+					placeholder="Nhập lại mật khẩu"
 					variant="soft"
 					class="w-full"
 					:type="showPw2 ? 'text' : 'password'"
@@ -168,7 +184,7 @@ const onSignup = async (): Promise<void> => {
 				type="submit"
 				class="w-full justify-center"
 			>
-				Đăng ký
+				{{ loading ? 'Đang xử lý...' : 'Đăng ký' }}
 				<UIcon
 					name="i-lucide-arrow-right"
 					class="ml-2"

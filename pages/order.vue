@@ -20,13 +20,14 @@ interface SimpleTab {
 	label: string;
 }
 
+const user = useUserStore();
 const toast = useToast();
 const config = useRuntimeConfig();
 const apiBaseUrl = config.public.apiBaseUrl;
 const loading = ref<boolean>(true);
 const error = ref<string>("");
-
 const openAlert = ref(true);
+const redirectUrl = ref<string>("/order");
 
 const steps: StepperItem[] = [
 	{
@@ -47,7 +48,6 @@ const steps: StepperItem[] = [
 ];
 const stepper = useTemplateRef("stepper");
 const activeStep = ref<number>(1);
-
 const activeSet = ref<number>(1);
 const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
 const menu = ref<Dish[]>([]);
@@ -173,6 +173,7 @@ const onNextStep = () => {
 			return;
 		}
 		stepper.value.next();
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 };
 </script>
@@ -276,10 +277,13 @@ const onNextStep = () => {
 					</template>
 
 					<template #info>
-						<div class="flex flex-col md:flex-row gap-y-2">
+						<div
+							v-if="!user.token"
+							class="flex flex-col md:flex-row items-stretch md:items-center gap-y-2 my-4 md:my-8"
+						>
 							<div class="flex-1 flex items-center justify-center">
 								<div class="p-2 md:p-4 w-sm">
-									<LoginForm />
+									<LoginForm :redirect-url="redirectUrl" />
 								</div>
 							</div>
 							<USeparator
@@ -294,9 +298,72 @@ const onNextStep = () => {
 							/>
 							<div class="flex-1 flex items-center justify-center">
 								<div class="p-2 md:p-4 w-sm">
-									<SignupForm />
+									<SignupForm :redirect-url="redirectUrl" />
 								</div>
 							</div>
+						</div>
+						<div
+							v-else
+							class="max-w-md mx-auto space-y-4  my-4 md:my-8"
+						>
+							<h4 class="mb-3 md:mb-5 text-center">
+								<p class="uppercase text-lg md:text-xl font-semibold">
+									Thông Tin Nhận Hàng
+								</p>
+								<p class="text-muted text-sm font-normal">
+									Đơn hàng sẽ được ship tới bạn qua thông tin phía dưới
+								</p>
+							</h4>
+							<UFormField
+								label="Tên người nhận"
+								name="name"
+								required
+							>
+								<UInput
+									v-model="user.name"
+									type="text"
+									variant="soft"
+									class="w-full"
+								/>
+							</UFormField>
+							<UFormField
+								label="Số điện thoại"
+								name="username"
+								required
+							>
+								<UInput
+									v-model="user.username"
+									type="tel"
+									variant="soft"
+									class="w-full"
+									autocomplete="tel"
+								/>
+							</UFormField>
+							<UFormField
+								label="Địa chỉ"
+								name="address"
+								required
+							>
+								<UInput
+									v-model="user.address"
+									type="tel"
+									variant="soft"
+									class="w-full"
+									placeholder="Nhập địa chỉ nhận hàng"
+								/>
+							</UFormField>
+							<UFormField
+								label="Ghi chú"
+								name="note"
+							>
+								<UTextarea
+									v-model="user.address"
+									type="tel"
+									variant="soft"
+									class="w-full"
+									placeholder="Bạn có yêu cầu gì không?"
+								/>
+							</UFormField>
 						</div>
 					</template>
 

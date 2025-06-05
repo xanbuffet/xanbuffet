@@ -1,4 +1,8 @@
 <script setup lang="ts">
+const props = defineProps({
+	redirectUrl: String,
+});
+
 const router = useRouter();
 const toast = useToast();
 const user = useUserStore();
@@ -27,6 +31,7 @@ const form = ref<LoginForm>({
 });
 const loading = ref<boolean>(false);
 const error = ref<string>("");
+const showPw = ref(false);
 
 const onLogin = async (): Promise<void> => {
 	loading.value = true;
@@ -51,7 +56,7 @@ const onLogin = async (): Promise<void> => {
 			is_admin: response.data.is_admin,
 			token: response.data.token,
 		});
-		router.push("/dashboard");
+		router.push(props.redirectUrl ?? "/order");
 	}
 	catch (err) {
 		const fetchError = err as { data?: ApiError };
@@ -71,8 +76,13 @@ const onLogin = async (): Promise<void> => {
 
 <template>
 	<div>
-		<h4 class="uppercase text-lg md:text-xl font-semibold mb-2 md:mb-4 text-center">
-			Đăng Nhập
+		<h4 class="mb-3 md:mb-5 text-center">
+			<p class="uppercase text-lg md:text-xl font-semibold">
+				Đăng Nhập
+			</p>
+			<p class="text-muted text-sm font-normal">
+				Theo dõi đơn hàng và nhận nhiều ưu đãi thành viên
+			</p>
 		</h4>
 		<p
 			v-if="error"
@@ -107,14 +117,29 @@ const onLogin = async (): Promise<void> => {
 					v-model="form.password"
 					variant="soft"
 					class="w-full"
-					type="password"
-				/>
+					placeholder="Nhập mật khẩu"
+					:type="showPw ? 'text' : 'password'"
+					:ui="{ trailing: 'pe-1' }"
+				>
+					<template #trailing>
+						<UButton
+							color="neutral"
+							variant="link"
+							size="sm"
+							:icon="showPw ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+							:aria-label="showPw ? 'Hide password' : 'Show password'"
+							:aria-pressed="showPw"
+							aria-controls="password"
+							@click="showPw = !showPw"
+						/>
+					</template>
+				</UInput>
 			</UFormField>
 			<UButton
 				type="submit"
 				class="w-full justify-center"
 			>
-				Đăng nhập
+				{{ loading ? 'Đang xử lý...' : 'Đăng nhập' }}
 				<UIcon
 					name="i-lucide-arrow-right"
 					class="ml-2"
