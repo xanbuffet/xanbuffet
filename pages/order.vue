@@ -17,12 +17,19 @@ interface SimpleTab {
 	value: number;
 	label: string;
 }
+interface Order {
+	user_id: number | null;
+	address: string;
+	notes: string | null;
+	dishes: number[][];
+}
 
 const user = useUserStore();
 const toast = useToast();
 const config = useRuntimeConfig();
 const apiBaseUrl = config.public.apiBaseUrl;
 const loading = ref<boolean>(true);
+const isSubmitting = ref<boolean>(false);
 const error = ref<string>("");
 const openAlert = ref(true);
 const redirectUrl = ref<string>("/order");
@@ -50,6 +57,12 @@ const activeSet = ref<number>(1);
 const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
 const menu = ref<Dish[]>([]);
 const dishesOfSet = ref<Dish[][]>([]);
+const order = ref<Order>({
+	user_id: user.id,
+	address: user.address ?? "o day ne",
+	notes: null,
+	dishes: [],
+});
 
 const getDayOfWeek = () => {
 	const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -172,6 +185,59 @@ const onNextStep = () => {
 		}
 		stepper.value.next();
 		window.scrollTo({ top: 0, behavior: "smooth" });
+	}
+	else if (stepper.value?.hasNext && activeStep.value === 1) {
+		if (order.value.address.trim() == "") {
+			toast.add({
+				title: "Địa chỉ không được để trống",
+				description: "Đơn hàng sẽ được gửi tới địa chỉ này.",
+				icon: "i-lucide-alert-triangle",
+				color: "error",
+			});
+			return;
+		}
+		order.value.dishes = sets.value.map((set) => {
+			const dishes = selectedDishesOfSet.value[set.value] || [];
+			return dishes.map(dish => dish.id);
+		});
+		stepper.value.next();
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	}
+	else if (activeStep.value === 2) {
+		onSubmit();
+	}
+};
+const onSubmit = async () => {
+	isSubmitting.value = true;
+	try {
+		const { data, error } = await useFetch("/api/orders", {
+			method: "POST",
+			body: {
+				user_id: order.value.user_id,
+				address: order.value.address,
+				notes: order.value.notes,
+				dishes: order.value.dishes,
+			},
+		});
+
+		if (error.value) {
+			alert("Lỗi khi đặt hàng: " + JSON.stringify(error.value.data?.error));
+			return;
+		}
+
+		if (data.value) {
+			alert("Đặt hàng thành công!");
+			order.value.address = user.address ?? "";
+			order.value.notes = null;
+			order.value.dishes = [];
+			navigateTo("/user/orders");
+		}
+	}
+	catch (err) {
+		alert("Đã xảy ra lỗi: " + err.message);
+	}
+	finally {
+		isSubmitting.value = false;
 	}
 };
 </script>
@@ -319,6 +385,7 @@ const onNextStep = () => {
 							>
 								<UInput
 									v-model="user.name"
+									disabled
 									type="text"
 									variant="soft"
 									class="w-full"
@@ -331,6 +398,7 @@ const onNextStep = () => {
 							>
 								<UInput
 									v-model="user.username"
+									disabled
 									type="tel"
 									variant="soft"
 									class="w-full"
@@ -343,19 +411,34 @@ const onNextStep = () => {
 								required
 							>
 								<UInput
-									v-model="user.address"
+									v-model="order.address"
 									type="tel"
 									variant="soft"
 									class="w-full"
 									placeholder="Nhập địa chỉ nhận hàng"
-								/>
+									:ui="{ trailing: 'pe-1' }"
+								>
+									<template
+										v-if="order.address?.length"
+										#trailing
+									>
+										<UButton
+											color="neutral"
+											variant="link"
+											size="sm"
+											icon="i-lucide-circle-x"
+											aria-label="Clear input"
+											@click="order.address = ''"
+										/>
+									</template>
+								</UInput>
 							</UFormField>
 							<UFormField
 								label="Ghi chú"
 								name="note"
 							>
 								<UTextarea
-									v-model="user.address"
+									v-model="order.notes"
 									type="tel"
 									variant="soft"
 									class="w-full"
@@ -375,7 +458,110 @@ const onNextStep = () => {
 					</template>
 
 					<template #confirm>
-						Confirm
+						<div class="flex flex-col-reverse md:flex-row items-start gap-4 my-4 md:my-8">
+							<div class="block md:hidden w-full flex-none">
+								<UButton
+									icon="i-lucide-circle-check-big"
+									color="primary"
+									size="lg"
+									class="w-full justify-center flex"
+								>
+									Hoàn Tất Đặt Hàng
+								</UButton>
+							</div>
+							<UCard
+								:ui="{ body: 'p-2 sm:p-2 md:p-4' }"
+								variant="soft"
+								class="w-full md:w-8/12"
+							>
+								<h4 class=" font-semibold">
+									Tổng số suất: {{ order.dishes?.length }}
+								</h4>
+								<div class="my-4 md:my-6">
+									<ul class="list-inside leading-7">
+										<li
+											v-for="set in sets"
+											:key="set.value"
+										>
+											<div class="inline-flex flex-wrap mb-2">
+												<div class="flex items-center mr-2">
+													<UIcon name="i-lucide-dot" />Suất {{ set.value }}:
+												</div>
+												<div
+													v-for="(dish, index) in selectedDishesOfSet[set.value]"
+													:key="dish.id"
+												>
+													<UBadge
+														color="neutral"
+														variant="soft"
+													>
+														{{ dish.name }}
+													</UBadge>
+													<span v-if="index < selectedDishesOfSet[set.value].length - 1">,</span>
+												</div>
+											</div>
+										</li>
+									</ul>
+									<div class="mt-4 italic">
+										Lưu ý: Mỗi suất đã bao gồm dụng cụ ăn uống, cơm và canh.
+									</div>
+								</div>
+							</UCard>
+							<UCard
+								:ui="{ body: 'p-2 sm:p-2 md:p-4' }"
+								variant="soft"
+								class="w-full md:w-4/12"
+							>
+								<div class="flex gap-x-3">
+									<UIcon
+										name="i-lucide-map-pin-check"
+										class="mt-1 text-primary size-5"
+									/>
+									<div class="overflow-hidden flex-1">
+										<p class="font-bold">
+											{{ user.name }}
+										</p>
+										<p class="text-muted">
+											{{ user.username }}
+										</p>
+										<p class="text-muted">
+											{{ order.address }}
+										</p>
+										<p
+											v-if="order.notes"
+											class="mt-2 text-muted italic line-clamp-1 text-sm md:text-base"
+										>
+											{{ order.notes }}
+										</p>
+									</div>
+								</div>
+								<div class="flex gap-x-3 mt-2 md:mt-4">
+									<UIcon
+										name="i-lucide-receipt-text"
+										class="mt-1 text-primary size-5"
+									/>
+									<div class="overflow-hidden flex-1">
+										<p>
+											Tiền tạm tính:
+											<span class="text-xl md:text-2xl font-semibold">
+												{{ new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(35000*order.dishes?.length) }}
+											</span>
+										</p>
+										<p class="text-muted italic text-sm">
+											Phí ship: (Chưa được cập nhập)
+										</p>
+									</div>
+								</div>
+								<UButton
+									icon="i-lucide-circle-check-big"
+									color="primary"
+									size="lg"
+									class="w-full mt-5 justify-center hidden md:flex"
+								>
+									Hoàn Tất Đặt Hàng
+								</UButton>
+							</UCard>
+						</div>
 					</template>
 				</UStepper>
 				<div class="w-full bg-default fixed bottom-0 left-0 right-0 z-20 border-t border-default shadow-md">
@@ -388,16 +574,18 @@ const onNextStep = () => {
 						>
 							Quay lại
 						</UButton>
-						<div class="flex flex-col md:flex-row gap-x-2 text-center text-sm md:text-base">
+						<div
+							v-if="activeStep < 2"
+							class="flex flex-col md:flex-row gap-x-2 text-center text-sm md:text-base"
+						>
 							<p>Suất {{ activeSet }}:</p>
 							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
 						</div>
 						<UButton
 							trailing-icon="i-lucide-arrow-right"
-							:disabled="!stepper?.hasNext"
 							@click="onNextStep"
 						>
-							Tiếp
+							{{ activeStep == 2 ? 'Hoàn Thành' : 'Tiếp' }}
 						</UButton>
 					</div>
 				</div>

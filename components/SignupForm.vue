@@ -61,6 +61,7 @@ const onSignup = async (): Promise<void> => {
 			address: response.data.address,
 			token: response.data.token,
 		});
+		window.scrollTo({ top: 0, behavior: "smooth" });
 		router.push(props.redirectUrl ?? "/");
 	}
 	catch (err) {
