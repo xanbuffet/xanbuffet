@@ -16,9 +16,9 @@ interface SignupForm {
 interface ApiResponse {
 	message: string;
 	data: {
+		id: number;
 		name: string;
 		username: string;
-		is_admin: boolean;
 		token: string;
 		address: string | null;
 	};
@@ -55,13 +55,13 @@ const onSignup = async (): Promise<void> => {
 			credentials: "include",
 		});
 		user.setUser({
+			id: response.data.id,
 			name: response.data.name,
 			username: response.data.username,
 			address: response.data.address,
-			is_admin: response.data.is_admin,
 			token: response.data.token,
 		});
-		router.push(props.redirectUrl ?? "/order");
+		router.push(props.redirectUrl ?? "/");
 	}
 	catch (err) {
 		const fetchError = err as { data?: ApiError };

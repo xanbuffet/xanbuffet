@@ -133,18 +133,14 @@ const selectedDishesOfSet = computed(() => {
 	return result;
 });
 const onSelectDish = (dish: Dish, set: number | string | undefined) => {
-	console.log(`Selected dish: ${dish.name} for set ${set}`);
-
 	if (set === undefined || set === null) return;
 	set = Number(set);
 
 	const selected = selectedDishesOfSet.value[set] || [];
-	console.log("selected: ", selected);
 	const index: number = selected.findIndex((d: Dish) => d.id === dish.id);
 	if (index > -1) {
 		selected.splice(index, 1);
 		dish.selected = false;
-		console.log("index: ", index);
 	}
 	else {
 		if (selected.length >= 6) {
@@ -366,6 +362,15 @@ const onNextStep = () => {
 									placeholder="Bạn có yêu cầu gì không?"
 								/>
 							</UFormField>
+							<div class="flex justify-center md:justify-end my-3 md:my-6">
+								<UButton
+									trailing-icon="i-lucide-arrow-right"
+									:disabled="!stepper?.hasNext"
+									@click="onNextStep"
+								>
+									Xác nhận đặt hàng
+								</UButton>
+							</div>
 						</div>
 					</template>
 

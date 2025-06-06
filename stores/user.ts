@@ -1,4 +1,5 @@
 export interface User {
+	id: number | null;
 	name: string | null;
 	username: string | null;
 	address: string | null;
@@ -8,6 +9,7 @@ export interface User {
 
 export const useUserStore = defineStore("user", {
 	state: (): User => ({
+		id: null,
 		name: null,
 		username: null,
 		address: null,
@@ -16,6 +18,7 @@ export const useUserStore = defineStore("user", {
 	}),
 	actions: {
 		setUser(user: Partial<User>) {
+			this.id = user.id ?? null;
 			this.name = user.name ?? null;
 			this.username = user.username ?? null;
 			this.address = user.address ?? null;
@@ -23,6 +26,7 @@ export const useUserStore = defineStore("user", {
 			this.token = user.token ?? null;
 		},
 		clearUser() {
+			this.id = null;
 			this.name = null;
 			this.username = null;
 			this.address = null;
