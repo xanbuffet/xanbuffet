@@ -1,71 +1,33 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import type { NavigationMenuItem } from "@nuxt/ui";
+
+const auth = useAuthStore();
+const user = useUserStore();
 
 const items = ref<NavigationMenuItem[]>([
 	{
 		label: "Trang chủ",
 		icon: "i-lucide-house",
 		to: "/",
+		onSelect: () => open.value = false,
 	},
 	{
 		label: "Menu",
 		icon: "i-lucide-utensils",
 		to: "/menu",
-		children: [
-			{
-				label: "Thứ Hai",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của thứ Hai",
-				to: "/menu/monday",
-			},
-			{
-				label: "Thứ Ba",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của thứ Ba",
-				to: "/menu/tuesday",
-			},
-			{
-				label: "Thứ Tư",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của thứ Tư",
-				to: "/menu/wednesday",
-			},
-			{
-				label: "Thứ Năm",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của thứ Năm",
-				to: "/menu/thursday",
-			},
-			{
-				label: "Thứ Sáu",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của thứ Sáu",
-				to: "/menu/friday",
-			},
-			{
-				label: "Thứ Bảy",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của thứ Bảy",
-				to: "/menu/saturday",
-			},
-			{
-				label: "Chủ Nhật",
-				icon: "i-lucide-dot",
-				description: "Menu các món ăn của Chủ Nhật",
-				to: "/menu/sunday",
-			},
-		],
+		onSelect: () => open.value = false,
 	},
 	{
 		label: "Đặt hàng",
 		icon: "i-lucide-shopping-cart",
 		to: "/order",
+		onSelect: () => open.value = false,
 	},
 	{
 		label: "Địa chỉ",
 		icon: "i-lucide-map-pin",
 		to: "/address",
+		onSelect: () => open.value = false,
 	},
 	{
 		label: "TikTok",
@@ -100,13 +62,25 @@ const open = ref(false);
 					class="w-full justify-center"
 				/>
 			</div>
-			<div class="flex items-center justify-end lg:flex-1 gap-1.5">
+			<div class="flex items-center justify-end lg:flex-1 gap-2">
 				<UButton
-					class="hidden lg:block"
-					variant="subtle"
-				>
-					Đăng nhập / Đăng ký
-				</UButton>
+					v-if="user.isAuthenticated"
+					icon="i-lucide-circle-user-round"
+				/>
+				<div v-else>
+					<UButton
+						class="hidden md:block"
+						variant="subtle"
+						@click="auth.isVisible = true"
+					>
+						Đăng nhập / Đăng ký
+					</UButton>
+					<UButton
+						class="inline-flex md:hidden"
+						variant="subtle"
+						icon="i-lucide-circle-user-round"
+					/>
+				</div>
 				<UButton
 					class="inline-flex lg:hidden"
 					variant="subtle"

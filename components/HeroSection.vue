@@ -5,16 +5,13 @@ const slides = ref([
 	{ src: "/images/slide2.jpg", caption: "Món thay đổi mỗi ngày" },
 	{ src: "/images/slide3.jpg", caption: "16 món tự chọn" },
 ]);
-const swiper = useSwiper(containerRef, {
+useSwiper(containerRef, {
 	effect: "fade",
 	loop: true,
 	autoplay: {
 		delay: 3500,
 		disableOnInteraction: false,
 	},
-});
-onMounted(() => {
-	console.log(swiper.instance);
 });
 </script>
 

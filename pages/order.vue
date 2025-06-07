@@ -1,18 +1,7 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
+import type { Dish, MenuResponse } from "@/types/common";
 
-interface Dish {
-	id: number;
-	name: string;
-	image: string | undefined;
-	selected: boolean;
-}
-interface MenuResponse {
-	data: {
-		status: string;
-		dishes: Dish[];
-	};
-}
 interface SimpleTab {
 	value: number;
 	label: string;
@@ -31,7 +20,6 @@ const apiBaseUrl = config.public.apiBaseUrl;
 const loading = ref<boolean>(true);
 const isSubmitting = ref<boolean>(false);
 const error = ref<string>("");
-const openAlert = ref(true);
 const redirectUrl = ref<string>("/order");
 
 const steps: StepperItem[] = [
@@ -58,8 +46,8 @@ const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
 const menu = ref<Dish[]>([]);
 const dishesOfSet = ref<Dish[][]>([]);
 const order = ref<Order>({
-	user_id: user.id,
-	address: user.address ?? "o day ne",
+	user_id: user.userId,
+	address: user.userAddress ?? "",
 	notes: null,
 	dishes: [],
 });
@@ -111,9 +99,6 @@ const fetchMenu = async () => {
 
 onMounted(() => {
 	fetchMenu();
-	setTimeout(() => {
-		openAlert.value = false;
-	}, 6000);
 });
 
 const onAddSet = () => {
@@ -129,13 +114,16 @@ const onAddSet = () => {
 		dishesOfSet.value[newTabIndex] = menu.value.map(dish => ({ ...dish, selected: false }));
 	}
 };
-const onRemoveSet = (value: number | string | undefined) => {
+const onRemoveSet = (value: number) => {
 	if (sets.value.length <= 1) return;
 
 	const newTabs = sets.value.filter(tab => tab.value !== value);
 	sets.value = newTabs;
 
 	activeSet.value = Number(sets.value[0].value);
+
+	const { [value]: removed, ...rest } = dishesOfSet.value;
+	dishesOfSet.value = rest;
 };
 const selectedDishesOfSet = computed(() => {
 	const result: Record<number, Dish[]> = {};
@@ -211,30 +199,58 @@ const onSubmit = async () => {
 	isSubmitting.value = true;
 	try {
 		const { data, error } = await useFetch("/api/orders", {
+			baseURL: apiBaseUrl,
 			method: "POST",
+			headers: { "Content-Type": "application/json" },
 			body: {
 				user_id: order.value.user_id,
 				address: order.value.address,
 				notes: order.value.notes,
 				dishes: order.value.dishes,
 			},
+			onResponseError({ response }) {
+				if (response.status === 401) {
+					// showLoginModal.value = true; // Mở UModal khi lỗi 401
+					console.log(response);
+				}
+			},
 		});
+		// console.log(data.value);
+		// console.log(error.value);
 
-		if (error.value) {
-			alert("Lỗi khi đặt hàng: " + JSON.stringify(error.value.data?.error));
-			return;
-		}
+		// if (error.value) {
+		// 	toast.add({
+		// 		title: "Uh oh! Có lỗi xảy ra.",
+		// 		description: error.value.data?.message,
+		// 		icon: "i-lucide-wifi",
+		// 		color: "error",
+		// 	});
+		// 	return;
+		// }
 
-		if (data.value) {
-			alert("Đặt hàng thành công!");
-			order.value.address = user.address ?? "";
-			order.value.notes = null;
-			order.value.dishes = [];
-			navigateTo("/user/orders");
-		}
+		// if (data.value) {
+		// 	toast.add({
+		// 		title: "Đặt hàng thành công!",
+		// 		description: "Đơn hàng đang được xử lý để giao tới cho bạn.",
+		// 		icon: "i-lucide-party-popper",
+		// 		color: "success",
+		// 	});
+		// 	order.value.address = user.address ?? "";
+		// 	order.value.notes = null;
+		// 	order.value.dishes = [];
+		// 	navigateTo("/user/orders");
+		// }
 	}
 	catch (err) {
-		alert("Đã xảy ra lỗi: " + err.message);
+		if (err instanceof Error) {
+			console.error(err.message);
+			toast.add({
+				title: "Uh oh! Có lỗi xảy ra.",
+				description: err.message,
+				icon: "i-lucide-wifi",
+				color: "error",
+			});
+		}
 	}
 	finally {
 		isSubmitting.value = false;
@@ -245,15 +261,6 @@ const onSubmit = async () => {
 <template>
 	<div class="isolate relative overflow-hidden">
 		<div class="w-full max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-10">
-			<UAlert
-				v-if="openAlert"
-				color="neutral"
-				variant="soft"
-				description="Mỗi suất bao gồm dụng cụ ăn uống, cơm và canh. Khách đặt online vui lòng chọn tối thiểu 3 món và tối đa 6 món."
-				icon="i-lucide-info"
-				close
-				@update:open="openAlert = false"
-			/>
 			<section class="my-5 lg:my-8">
 				<UStepper
 					ref="stepper"
@@ -342,7 +349,7 @@ const onSubmit = async () => {
 
 					<template #info>
 						<div
-							v-if="!user.token"
+							v-if="!user.isAuthenticated"
 							class="flex flex-col md:flex-row items-stretch md:items-center gap-y-2 my-4 md:my-8"
 						>
 							<div class="flex-1 flex items-center justify-center">
@@ -384,7 +391,7 @@ const onSubmit = async () => {
 								required
 							>
 								<UInput
-									v-model="user.name"
+									v-model="user.userFullName"
 									disabled
 									type="text"
 									variant="soft"
@@ -397,7 +404,7 @@ const onSubmit = async () => {
 								required
 							>
 								<UInput
-									v-model="user.username"
+									v-model="user.userUsername"
 									disabled
 									type="tel"
 									variant="soft"
@@ -461,10 +468,12 @@ const onSubmit = async () => {
 						<div class="flex flex-col-reverse md:flex-row items-start gap-4 my-4 md:my-8">
 							<div class="block md:hidden w-full flex-none">
 								<UButton
+									:disabled="isSubmitting"
 									icon="i-lucide-circle-check-big"
 									color="primary"
 									size="lg"
 									class="w-full justify-center flex"
+									@click="onSubmit"
 								>
 									Hoàn Tất Đặt Hàng
 								</UButton>
@@ -519,10 +528,10 @@ const onSubmit = async () => {
 									/>
 									<div class="overflow-hidden flex-1">
 										<p class="font-bold">
-											{{ user.name }}
+											{{ user.userFullName }}
 										</p>
 										<p class="text-muted">
-											{{ user.username }}
+											{{ user.userUsername }}
 										</p>
 										<p class="text-muted">
 											{{ order.address }}
@@ -553,10 +562,12 @@ const onSubmit = async () => {
 									</div>
 								</div>
 								<UButton
+									:disabled="isSubmitting"
 									icon="i-lucide-circle-check-big"
 									color="primary"
 									size="lg"
 									class="w-full mt-5 justify-center hidden md:flex"
+									@click="onSubmit"
 								>
 									Hoàn Tất Đặt Hàng
 								</UButton>
@@ -569,7 +580,7 @@ const onSubmit = async () => {
 						<UButton
 							variant="outline"
 							leading-icon="i-lucide-arrow-left"
-							:disabled="!stepper?.hasPrev"
+							:disabled="!stepper?.hasPrev || isSubmitting"
 							@click="stepper?.prev()"
 						>
 							Quay lại
@@ -582,6 +593,7 @@ const onSubmit = async () => {
 							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
 						</div>
 						<UButton
+							:disabled="isSubmitting"
 							trailing-icon="i-lucide-arrow-right"
 							@click="onNextStep"
 						>

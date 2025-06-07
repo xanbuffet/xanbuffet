@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { LoginForm, AuthResponse } from "@/types/common";
+
 const props = defineProps({
 	redirectUrl: String,
 });
@@ -7,29 +9,11 @@ const router = useRouter();
 const toast = useToast();
 const user = useUserStore();
 
-interface LoginForm {
-	username: string;
-	password: string;
-}
-interface ApiResponse {
-	message: string;
-	data: {
-		id: number;
-		name: string;
-		username: string;
-		is_admin: boolean;
-		token: string;
-		address: string | null;
-	};
-}
 interface ApiError {
 	message?: string;
 }
 
-const form = ref<LoginForm>({
-	username: "",
-	password: "",
-});
+const form = ref<LoginForm>({ username: "", password: "" });
 const loading = ref<boolean>(false);
 const error = ref<string>("");
 const showPw = ref(false);
@@ -38,13 +22,11 @@ const onLogin = async (): Promise<void> => {
 	loading.value = true;
 	error.value = "";
 	try {
-		// Lấy CSRF token
 		await $fetch("/sanctum/csrf-cookie", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
 		});
-		// Gọi API đăng nhập
-		const response = await $fetch<ApiResponse>("/api/login", {
+		const response = await $fetch<AuthResponse>("/api/login", {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
@@ -55,7 +37,6 @@ const onLogin = async (): Promise<void> => {
 			name: response.data.name,
 			username: response.data.username,
 			address: response.data.address,
-			token: response.data.token,
 		});
 		router.push(props.redirectUrl ?? "/");
 	}

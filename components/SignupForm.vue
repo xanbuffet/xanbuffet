@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { SignupForm, AuthResponse } from "@/types/common";
+
 const props = defineProps({
 	redirectUrl: String,
 });
@@ -7,32 +9,11 @@ const router = useRouter();
 const toast = useToast();
 const user = useUserStore();
 
-interface SignupForm {
-	name: string;
-	username: string;
-	password: string;
-	password_confirmation: string;
-}
-interface ApiResponse {
-	message: string;
-	data: {
-		id: number;
-		name: string;
-		username: string;
-		token: string;
-		address: string | null;
-	};
-}
 interface ApiError {
 	message?: string;
 }
 
-const form = ref<SignupForm>({
-	name: "",
-	username: "",
-	password: "",
-	password_confirmation: "",
-});
+const form = ref<SignupForm>({ name: "", username: "", password: "", password_confirmation: "" });
 const loading = ref<boolean>(false);
 const error = ref<string>("");
 const showPw = ref(false);
@@ -48,7 +29,7 @@ const onSignup = async (): Promise<void> => {
 			credentials: "include",
 		});
 		// Gọi API đăng ký
-		const response = await $fetch<ApiResponse>("/api/register", {
+		const response = await $fetch<AuthResponse>("/api/register", {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
@@ -59,7 +40,6 @@ const onSignup = async (): Promise<void> => {
 			name: response.data.name,
 			username: response.data.username,
 			address: response.data.address,
-			token: response.data.token,
 		});
 		window.scrollTo({ top: 0, behavior: "smooth" });
 		router.push(props.redirectUrl ?? "/");
