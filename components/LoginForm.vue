@@ -1,80 +1,94 @@
 <script setup lang="ts">
+import { z } from "zod";
 import type { LoginForm, AuthResponse } from "@/types/common";
 
 const props = defineProps({
 	redirectUrl: String,
+	message: String,
 });
 
-const router = useRouter();
-const toast = useToast();
 const user = useUserStore();
-
-interface ApiError {
-	message?: string;
-}
-
+const auth = useAuthStore();
 const form = ref<LoginForm>({ username: "", password: "" });
-const loading = ref<boolean>(false);
-const error = ref<string>("");
+const isLoading = ref<boolean>(false);
+const errorMsg = ref<string>("");
 const showPw = ref(false);
 
+const schema = z.object({
+	username: z
+		.string()
+		.min(1, "Vui lòng cung cấp số điện thoại")
+		.regex(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số"),
+	password: z
+		.string()
+		.min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+});
+
 const onLogin = async (): Promise<void> => {
-	loading.value = true;
-	error.value = "";
+	isLoading.value = true;
+	errorMsg.value = "";
 	try {
-		await $fetch("/sanctum/csrf-cookie", {
+		await useFetch("/sanctum/csrf-cookie", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
 		});
-		const response = await $fetch<AuthResponse>("/api/login", {
+		const { data, error } = await useFetch<AuthResponse>("/api/login", {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
 		});
-		user.setUser({
-			id: response.data.id,
-			name: response.data.name,
-			username: response.data.username,
-			address: response.data.address,
-		});
-		router.push(props.redirectUrl ?? "/");
+
+		if (data.value) {
+			user.setUser({
+				id: data.value.data.id,
+				name: data.value.data.name,
+				username: data.value.data.username,
+				address: data.value.data.address,
+			});
+
+			auth.isVisible = false;
+
+			await navigateTo(props.redirectUrl ?? "/");
+		}
+
+		if (error.value) {
+			errorMsg.value = error.value.data?.message || "Đã có lỗi xảy ra";
+			return;
+		}
 	}
 	catch (err) {
-		const fetchError = err as { data?: ApiError };
-		error.value = fetchError.data?.message || "Đăng nhập thất bại";
-		toast.add({
-			title: "Uh oh! Có lỗi xảy ra.",
-			description: error.value,
-			icon: "i-lucide-octagon-alert",
-			color: "error",
-		});
+		console.log(err);
+		errorMsg.value = "Không thể kết nối đến server";
 	}
 	finally {
-		loading.value = false;
+		isLoading.value = false;
 	}
 };
 </script>
 
 <template>
 	<div>
-		<h4 class="mb-3 md:mb-5 text-center">
+		<h4 class="mb-5 md:mb-10 text-center">
 			<p class="uppercase text-lg md:text-xl font-semibold">
 				Đăng Nhập
 			</p>
 			<p class="text-muted text-sm font-normal">
-				Theo dõi đơn hàng và nhận nhiều ưu đãi thành viên
+				{{ message ?? 'Theo dõi đơn hàng và nhận nhiều ưu đãi thành viên' }}
 			</p>
 		</h4>
 		<p
-			v-if="error"
+			v-if="errorMsg"
 			class="text-red-500 my-3 md:my-5 text-center"
 		>
-			{{ error }}
+			{{ errorMsg }}
 		</p>
-		<form
+		<UForm
+			:schema="schema"
+			:state="form"
 			class="mx-auto space-y-4"
-			@submit.prevent="onLogin"
+			:validate-on="['change', 'input']"
+			@submit="onLogin"
 		>
 			<UFormField
 				label="Số điện thoại"
@@ -119,14 +133,14 @@ const onLogin = async (): Promise<void> => {
 			</UFormField>
 			<UButton
 				type="submit"
-				class="w-full justify-center"
+				class="w-full justify-center hover:cursor-pointer"
 			>
-				{{ loading ? 'Đang xử lý...' : 'Đăng nhập' }}
+				{{ isLoading ? 'Đang xử lý...' : 'Đăng nhập' }}
 				<UIcon
 					name="i-lucide-arrow-right"
 					class="ml-2"
 				/>
 			</UButton>
-		</form>
+		</UForm>
 	</div>
 </template>

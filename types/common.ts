@@ -40,3 +40,7 @@ export interface MenuResponse {
 		dishes: Dish[];
 	};
 }
+
+export interface ApiErrorResponse {
+	message: string;
+}

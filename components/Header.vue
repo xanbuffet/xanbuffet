@@ -65,8 +65,12 @@ const open = ref(false);
 			<div class="flex items-center justify-end lg:flex-1 gap-2">
 				<UButton
 					v-if="user.isAuthenticated"
+					size="xl"
+					variant="ghost"
 					icon="i-lucide-circle-user-round"
-				/>
+				>
+					{{ user.userUsername }}
+				</UButton>
 				<div v-else>
 					<UButton
 						class="hidden md:block"
@@ -77,7 +81,8 @@ const open = ref(false);
 					</UButton>
 					<UButton
 						class="inline-flex md:hidden"
-						variant="subtle"
+						variant="ghost"
+						size="xl"
 						icon="i-lucide-circle-user-round"
 					/>
 				</div>
