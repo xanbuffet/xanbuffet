@@ -5,6 +5,45 @@
   --font-sans: "Montserrat", sans-serif;
   --ui-header-height: --spacing(16);
   --blur-2xs: 2px;
+
+  --animate-wiggle: wiggle 0.2s ease-in-out infinite;
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(-3deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+  }
+}
+
+@layer utilities {
+  .animate-typing {
+    animation: typing 2s steps(20) infinite alternate, blink 0.7s infinite;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid white;
+  }
+
+  @keyframes typing {
+    0% {
+      width: 0;
+      visibility: hidden;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+
+  @keyframes blink {
+    50% {
+      border-color: transparent;
+    }
+    100% {
+      border-color: white;
+    }
+  }
 }
 
 .tabs-scrollable {

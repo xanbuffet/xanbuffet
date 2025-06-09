@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem, DropdownMenuItem } from "@nuxt/ui";
 
 const auth = useAuthStore();
 const user = useUserStore();
 
-const items = ref<NavigationMenuItem[]>([
+const navMenuItems = ref<NavigationMenuItem[]>([
 	{
 		label: "Trang chủ",
 		icon: "i-lucide-house",
@@ -42,8 +42,24 @@ const items = ref<NavigationMenuItem[]>([
 		target: "_blank",
 	},
 ]);
+const userMenuItems: DropdownMenuItem[] = [
+	{
+		label: "Profile",
+		icon: "i-lucide-user",
+		to: "/user",
+	}, {
+		label: "Đơn hàng",
+		icon: "i-lucide-shopping-cart",
+		to: "/user/order",
+	}, {
+		label: "Đăng xuất",
+		icon: "i-lucide-log-out",
+		onSelect() {},
+	},
+];
 
 const open = ref(false);
+const openUserMenu = ref(false);
 </script>
 
 <template>
@@ -54,7 +70,7 @@ const open = ref(false);
 			</div>
 			<div class="hidden lg:flex">
 				<UNavigationMenu
-					:items="items"
+					:items="navMenuItems"
 					variant="link"
 					:ui="{
 						list: 'flex gap-x-1.5 justify-center',
@@ -63,28 +79,39 @@ const open = ref(false);
 				/>
 			</div>
 			<div class="flex items-center justify-end lg:flex-1 gap-2">
-				<UButton
+				<UDropdownMenu
 					v-if="user.isAuthenticated"
-					size="xl"
-					variant="ghost"
-					icon="i-lucide-circle-user-round"
+					v-model:open="openUserMenu"
+					arrow
+					:items="userMenuItems"
+					:ui="{
+						content: 'w-48',
+					}"
+					:content="{
+						align: 'end',
+						side: 'bottom',
+					}"
 				>
-					{{ user.userUsername }}
-				</UButton>
+					<UButton
+						size="xl"
+						variant="ghost"
+						icon="i-lucide-circle-user-round"
+						label="openUserMenu"
+					>
+						{{ user.userUsername }}
+					</UButton>
+				</UDropdownMenu>
 				<div v-else>
 					<UButton
-						class="hidden md:block"
 						variant="subtle"
 						@click="auth.isVisible = true"
 					>
-						Đăng nhập / Đăng ký
+						<span class="hidden md:block">Đăng nhập / Đăng ký</span>
+						<UIcon
+							class="block md:hidden size-5"
+							name="i-lucide-circle-user-round"
+						/>
 					</UButton>
-					<UButton
-						class="inline-flex md:hidden"
-						variant="ghost"
-						size="xl"
-						icon="i-lucide-circle-user-round"
-					/>
 				</div>
 				<UButton
 					class="inline-flex lg:hidden"
@@ -102,7 +129,7 @@ const open = ref(false);
 				<template #body>
 					<UNavigationMenu
 						orientation="vertical"
-						:items="items"
+						:items="navMenuItems"
 						variant="link"
 						:ui="{
 							list: 'flex flex-col gap-y-2 justify-center',

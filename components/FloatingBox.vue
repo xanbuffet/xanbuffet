@@ -2,12 +2,12 @@
 
 <template>
 	<div class="fixed z-50 right-3 md:right-6 bottom-1/5">
-		<div class="flex flex-col gap-y-3">
+		<div class="flex flex-col gap-y-4">
 			<div>
 				<UButton
-					class="font-bold rounded-full"
+					class="font-bold rounded-full animate-wiggle"
 					icon="i-lucide-phone-incoming"
-					color="neutral"
+					color="error"
 					variant="subtle"
 					size="xl"
 					to="tel:0927733111"

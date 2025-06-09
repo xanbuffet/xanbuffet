@@ -93,36 +93,38 @@
 						Đồ ăn, cơm, canh lấy thoải mái, có thể lấy thêm nhiều lần.
 					</div>
 					<ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
-						<UCard :ui="{ body: 'relative flex flex-col flex-1 lg:grid gap-x-8 gap-y-4 p-4 sm:p-4' }">
+						<UCard
+							:ui="{ body: 'relative flex flex-col flex-1 lg:grid gap-x-8 gap-y-4 p-4 sm:p-4 overflow-hidden' }"
+						>
 							<img
 								src="/images/dung-cu-an-uong.webp"
 								onerror="this.setAttribute('data-error', 1)"
 								alt="Dụng cụ ăn uống - Xan buffet"
-								class="aspect-[5/4] object-cover"
+								class="aspect-[5/4] object-cover hover:scale-105 transition-all ease-in-out duration-400"
 							>
 							<div class="flex flex-col gap-2">
 								<span class="text-lg font-semibold">Sạch sẽ - An toàn</span>
 								<span class="text-sm text-muted">Chúng tôi sử dụng dụng cụ ăn uống dùng một lần, thân thiện môi trường. Không gian sạch sẽ thoáng mát.</span>
 							</div>
 						</UCard>
-						<UCard :ui="{ body: 'relative flex flex-col flex-1 lg:grid gap-x-8 gap-y-4 p-4 sm:p-4' }">
+						<UCard :ui="{ body: 'relative flex flex-col flex-1 lg:grid gap-x-8 gap-y-4 p-4 sm:p-4 overflow-hidden' }">
 							<img
 								src="/images/quay-line-16-mon.jpg"
 								onerror="this.setAttribute('data-error', 1)"
 								alt="Quầy line 16 món - Xan buffet"
-								class="aspect-[5/4] object-cover"
+								class="aspect-[5/4] object-cover hover:scale-105 transition-all ease-in-out duration-400"
 							>
 							<div class="flex flex-col gap-2">
 								<span class="text-lg font-semibold">Quầy line 16 món</span>
 								<span class="text-sm text-muted">Đa dạng các món ăn, menu thay đổi hàng ngày.</span>
 							</div>
 						</UCard>
-						<UCard :ui="{ body: 'relative flex flex-col flex-1 lg:grid gap-x-8 gap-y-4 p-4 sm:p-4' }">
+						<UCard :ui="{ body: 'relative flex flex-col flex-1 lg:grid gap-x-8 gap-y-4 p-4 sm:p-4 overflow-hidden' }">
 							<img
 								src="/images/chuoi-quan-com.jpg"
 								onerror="this.setAttribute('data-error', 1)"
 								alt="Chi nhánh mọi nơi - Xan buffet"
-								class="aspect-[5/4] object-cover"
+								class="aspect-[5/4] object-cover hover:scale-105 transition-all ease-in-out duration-400"
 							>
 							<div class="flex flex-col gap-2">
 								<span class="text-lg font-semibold">Tìm địa chỉ gần bạn</span>

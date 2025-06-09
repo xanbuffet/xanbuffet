@@ -8,9 +8,11 @@ const auth = useAuthStore();
 		:ui="{ content: 'max-w-4xl' }"
 	>
 		<template #content>
-			<div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-5 relative">
-				<div class="hidden md:block">
-					<div class="py-10 px-5 flex flex-col items-center justify-start h-full gap-4">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative">
+				<div
+					class="hidden md:block bg-primary/20 dark:bg-primary/10 rounded-l-lg bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10"
+				>
+					<div class="p-4 py-10 px-5 flex flex-col items-center justify-start h-full gap-4">
 						<div v-if="auth.mode == 'login'">
 							<NuxtImg
 								placeholder
@@ -49,7 +51,7 @@ const auth = useAuthStore();
 						</div>
 					</div>
 				</div>
-				<div class="">
+				<div class="py-4 pr-4 pl-4 md:pl-0">
 					<div
 						v-if="auth.mode == 'login'"
 						class="py-5 md:py-10 flex flex-col gap-4"
@@ -82,7 +84,6 @@ const auth = useAuthStore();
 							>
 								Đăng nhập
 							</UButton>
-							ngay
 						</div>
 					</div>
 				</div>
