@@ -34,13 +34,28 @@ export interface Dish {
 	selected: boolean;
 }
 
-export interface MenuResponse {
+export interface Menu {
 	data: {
-		status: string;
+		name: string;
+		day_of_week: string;
 		dishes: Dish[];
 	};
 }
 
 export interface ApiErrorResponse {
 	message: string;
+}
+
+export interface SimpleTab {
+	value: number;
+	label: string;
+}
+
+export interface Order {
+	type: "guest" | "user";
+	guest_name: string;
+	guest_phone: string;
+	address: string;
+	notes: string;
+	dishes: number[][];
 }

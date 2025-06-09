@@ -54,7 +54,9 @@ const userMenuItems: DropdownMenuItem[] = [
 	}, {
 		label: "Đăng xuất",
 		icon: "i-lucide-log-out",
-		onSelect() {},
+		onSelect() {
+			user.logout();
+		},
 	},
 ];
 

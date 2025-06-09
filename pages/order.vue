@@ -1,26 +1,12 @@
 <script setup lang="ts">
-import type { StepperItem } from "@nuxt/ui";
-import type { Dish, MenuResponse } from "@/types/common";
-
-interface SimpleTab {
-	value: number;
-	label: string;
-}
-interface Order {
-	user_id: number | null;
-	address: string;
-	notes: string | null;
-	dishes: number[][];
-}
+import { z } from "zod";
+import type { StepperItem, TabsItem } from "@nuxt/ui";
+import type { Dish, SimpleTab, Order } from "@/types/common";
 
 const user = useUserStore();
+const menu = useMenuStore();
 const toast = useToast();
-const config = useRuntimeConfig();
-const apiBaseUrl = config.public.apiBaseUrl;
-const loading = ref<boolean>(true);
 const isSubmitting = ref<boolean>(false);
-const error = ref<string>("");
-const redirectUrl = ref<string>("/order");
 
 const steps: StepperItem[] = [
 	{
@@ -39,66 +25,49 @@ const steps: StepperItem[] = [
 		icon: "i-lucide-check-circle",
 	},
 ];
+const infoTabs = [
+	{
+		label: "Đặt hàng nhanh",
+		description: "Tạo đơn hàng nhanh chóng, sử dụng mã đơn để theo dõi đơn hàng",
+		slot: "guest" as const,
+	},
+	{
+		label: "Đăng nhập/Đăng ký",
+		description: "Đăng ký/Đăng nhập để nhận ưu đãi và theo dõi đơn hàng dễ dàng!",
+		slot: "user" as const,
+	},
+] satisfies TabsItem[];
+
 const stepper = useTemplateRef("stepper");
 const activeStep = ref<number>(0);
 const activeSet = ref<number>(1);
 const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
-const menu = ref<Dish[]>([]);
+
 const dishesOfSet = ref<Dish[][]>([]);
 const order = ref<Order>({
-	user_id: user.userId,
-	address: user.userAddress ?? "",
-	notes: null,
+	type: "guest",
+	guest_name: "",
+	guest_phone: "",
+	address: "",
+	notes: "",
 	dishes: [],
 });
+const guestSchema = z.object({
+	guest_name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
+	guest_phone: z.string().regex(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số"),
+	address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
+});
 
-const getDayOfWeek = () => {
-	const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-	const today = new Date();
-	return days[today.getDay()];
-};
-const fetchMenu = async () => {
-	const dayOfWeek = getDayOfWeek();
-	try {
-		const response = await $fetch<MenuResponse>(`${apiBaseUrl}/api/menus/${dayOfWeek}`, {
-			headers: {
-				Accept: "application/json",
-			},
-		});
-		menu.value = response.data.dishes.map(dish => ({
-			id: dish.id,
-			name: dish.name,
-			image: dish.image,
-			selected: false,
-		}));
-		dishesOfSet.value[1] = menu.value;
-	}
-	catch (err) {
-		console.error("Error fetching menu:", err);
-		let errorMessage = "Không thể tải thực đơn. Vui lòng thử lại sau.";
-		if (typeof err === "object" && err !== null && "status" in err) {
-			if (err.status === 404) {
-				errorMessage = "Không tìm thấy thực đơn cho ngày này.";
-			}
-			else if (err.status === 500) {
-				errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
-			}
-			error.value = errorMessage;
-			toast.add({
-				title: "Uh oh! Có lỗi xảy ra.",
-				description: errorMessage,
-				icon: "i-lucide-wifi",
-				color: "error",
-			});
-		}
-	}
-	finally {
-		loading.value = false;
-	}
-};
+watch(
+	() => menu.getMenu,
+	(newMenu) => {
+		dishesOfSet.value[1] = newMenu;
+	},
+	{ deep: true },
+);
 
 onMounted(() => {
-	fetchMenu();
+	menu.fetchMenu();
 });
 
 const onAddSet = () => {
@@ -110,8 +79,8 @@ const onAddSet = () => {
 
 	activeSet.value = newTabIndex;
 
-	if (menu.value.length > 0) {
-		dishesOfSet.value[newTabIndex] = menu.value.map(dish => ({ ...dish, selected: false }));
+	if (menu.getMenu.length > 0) {
+		dishesOfSet.value[newTabIndex] = menu.getMenu.map(dish => ({ ...dish, selected: false }));
 	}
 };
 const onRemoveSet = (value: number) => {
@@ -175,15 +144,6 @@ const onNextStep = () => {
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 	else if (stepper.value?.hasNext && activeStep.value === 1) {
-		if (order.value.address.trim() == "") {
-			toast.add({
-				title: "Địa chỉ không được để trống",
-				description: "Đơn hàng sẽ được gửi tới địa chỉ này.",
-				icon: "i-lucide-alert-triangle",
-				color: "error",
-			});
-			return;
-		}
 		order.value.dishes = sets.value.map((set) => {
 			const dishes = selectedDishesOfSet.value[set.value] || [];
 			return dishes.map(dish => dish.id);
@@ -199,62 +159,37 @@ const onSubmit = async () => {
 	isSubmitting.value = true;
 	try {
 		const { data, error } = await useFetch("/api/orders", {
-			baseURL: apiBaseUrl,
+			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: {
-				user_id: order.value.user_id,
-				address: order.value.address,
-				notes: order.value.notes,
-				dishes: order.value.dishes,
-			},
-			onResponseError({ response }) {
-				if (response.status === 401) {
-					// showLoginModal.value = true; // Mở UModal khi lỗi 401
-					console.log(response);
-				}
-			},
+			body: order.value,
 		});
-		// console.log(data.value);
-		// console.log(error.value);
 
-		// if (error.value) {
-		// 	toast.add({
-		// 		title: "Uh oh! Có lỗi xảy ra.",
-		// 		description: error.value.data?.message,
-		// 		icon: "i-lucide-wifi",
-		// 		color: "error",
-		// 	});
-		// 	return;
-		// }
-
-		// if (data.value) {
-		// 	toast.add({
-		// 		title: "Đặt hàng thành công!",
-		// 		description: "Đơn hàng đang được xử lý để giao tới cho bạn.",
-		// 		icon: "i-lucide-party-popper",
-		// 		color: "success",
-		// 	});
-		// 	order.value.address = user.address ?? "";
-		// 	order.value.notes = null;
-		// 	order.value.dishes = [];
-		// 	navigateTo("/user/orders");
-		// }
-	}
-	catch (err) {
-		if (err instanceof Error) {
-			console.error(err.message);
+		if (error.value) {
 			toast.add({
 				title: "Uh oh! Có lỗi xảy ra.",
-				description: err.message,
+				description: error.value.data?.message || "Đã có lỗi xảy ra",
 				icon: "i-lucide-wifi",
 				color: "error",
 			});
+			return;
 		}
+	}
+	catch (err) {
+		console.error(err);
+		toast.add({
+			title: "Uh oh! Có lỗi xảy ra.",
+			description: "Không thể kết nối đến server",
+			icon: "i-lucide-wifi",
+			color: "error",
+		});
 	}
 	finally {
 		isSubmitting.value = false;
 	}
+};
+const onGuestSubmit = () => {
+	onNextStep();
 };
 </script>
 
@@ -298,7 +233,7 @@ const onSubmit = async () => {
 							</template>
 							<template #content="{ item }">
 								<div
-									v-if="loading || error !== ''"
+									v-if="menu.isLoading || menu.getError"
 									class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
 								>
 									<div
@@ -348,120 +283,106 @@ const onSubmit = async () => {
 					</template>
 
 					<template #info>
-						<div
-							v-if="!user.isAuthenticated"
-							class="flex flex-col md:flex-row items-stretch md:items-center gap-y-2 my-4 md:my-8"
+						<UTabs
+							:items="infoTabs"
+							variant="pill"
+							class="my-5"
 						>
-							<div class="flex-1 flex items-center justify-center">
-								<div class="p-2 md:p-4 w-sm">
-									<LoginForm :redirect-url="redirectUrl" />
+							<template #guest="{ item }">
+								<div class="flex flex-col items-center mt-2">
+									<p class="italic text-sm md:text-base text-muted">
+										{{ item.description }}
+									</p>
+									<div class="w-full max-w-md mx-auto space-y-4 my-4 md:my-8">
+										<UForm
+											:state="order"
+											:schema="guestSchema"
+											:validate-on="['blur', 'change', 'input']"
+											class="mx-auto space-y-4"
+											@submit="onGuestSubmit"
+										>
+											<UFormField
+												label="Tên người nhận"
+												name="guest_name"
+												required
+											>
+												<UInput
+													v-model="order.guest_name"
+													type="text"
+													variant="soft"
+													class="w-full"
+													autofocus
+												/>
+											</UFormField>
+											<UFormField
+												label="Số điện thoại"
+												name="guest_phone"
+												required
+											>
+												<UInput
+													v-model="order.guest_phone"
+													type="tel"
+													variant="soft"
+													class="w-full"
+													autocomplete="tel"
+												/>
+											</UFormField>
+											<UFormField
+												label="Địa chỉ nhận hàng"
+												name="address"
+												required
+											>
+												<UInput
+													v-model="order.address"
+													type="tel"
+													variant="soft"
+													class="w-full"
+													placeholder="Nhập địa chỉ nhận hàng"
+													:ui="{ trailing: 'pe-1' }"
+												>
+													<template
+														v-if="order.address?.length"
+														#trailing
+													>
+														<UButton
+															color="neutral"
+															variant="link"
+															size="sm"
+															icon="i-lucide-circle-x"
+															aria-label="Clear input"
+															@click="order.address = ''"
+														/>
+													</template>
+												</UInput>
+											</UFormField>
+											<UFormField
+												label="Ghi chú"
+												name="notes"
+											>
+												<UTextarea
+													v-model="order.notes"
+													type="tel"
+													variant="soft"
+													class="w-full"
+													placeholder="Bạn có yêu cầu gì không?"
+												/>
+											</UFormField>
+											<div class="flex justify-end my-3 md:my-6">
+												<UButton
+													trailing-icon="i-lucide-arrow-right"
+													type="submit"
+												>
+													Xác nhận đặt hàng
+												</UButton>
+											</div>
+										</UForm>
+									</div>
 								</div>
-							</div>
-							<USeparator
-								orientation="vertical"
-								label="Hoặc"
-								class="hidden md:flex h-60"
-							/>
-							<USeparator
-								orientation="horizontal"
-								label="Hoặc"
-								class="flex md:hidden w-full"
-							/>
-							<div class="flex-1 flex items-center justify-center">
-								<div class="p-2 md:p-4 w-sm">
-									<SignupForm :redirect-url="redirectUrl" />
-								</div>
-							</div>
-						</div>
-						<div
-							v-else
-							class="max-w-md mx-auto space-y-4  my-4 md:my-8"
-						>
-							<h4 class="mb-5 md:mb-8 text-center">
-								<p class="uppercase text-lg md:text-xl font-semibold">
-									Thông Tin Nhận Hàng
-								</p>
-								<p class="text-muted text-sm font-normal">
-									Đơn hàng sẽ được ship tới bạn qua thông tin phía dưới
-								</p>
-							</h4>
-							<UFormField
-								label="Tên người nhận"
-								name="name"
-								required
-							>
-								<UInput
-									v-model="user.userFullName"
-									disabled
-									type="text"
-									variant="soft"
-									class="w-full"
-								/>
-							</UFormField>
-							<UFormField
-								label="Số điện thoại"
-								name="username"
-								required
-							>
-								<UInput
-									v-model="user.userUsername"
-									disabled
-									type="tel"
-									variant="soft"
-									class="w-full"
-									autocomplete="tel"
-								/>
-							</UFormField>
-							<UFormField
-								label="Địa chỉ nhận hàng"
-								name="address"
-								required
-							>
-								<UInput
-									v-model="order.address"
-									type="tel"
-									variant="soft"
-									class="w-full"
-									placeholder="Nhập địa chỉ nhận hàng"
-									:ui="{ trailing: 'pe-1' }"
-								>
-									<template
-										v-if="order.address?.length"
-										#trailing
-									>
-										<UButton
-											color="neutral"
-											variant="link"
-											size="sm"
-											icon="i-lucide-circle-x"
-											aria-label="Clear input"
-											@click="order.address = ''"
-										/>
-									</template>
-								</UInput>
-							</UFormField>
-							<UFormField
-								label="Ghi chú"
-								name="note"
-							>
-								<UTextarea
-									v-model="order.notes"
-									type="tel"
-									variant="soft"
-									class="w-full"
-									placeholder="Bạn có yêu cầu gì không?"
-								/>
-							</UFormField>
-							<div class="flex justify-center md:justify-end my-3 md:my-6">
-								<UButton
-									trailing-icon="i-lucide-arrow-right"
-									:disabled="!stepper?.hasNext"
-									@click="onNextStep"
-								>
-									Xác nhận đặt hàng
-								</UButton>
-							</div>
-						</div>
+							</template>
+							<template #user="{ item }">
+								{{ item.description }}
+							</template>
+						</UTabs>
 					</template>
 
 					<template #confirm>

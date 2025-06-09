@@ -13,42 +13,53 @@ const auth = useAuthStore();
 					class="hidden md:block bg-primary/20 dark:bg-primary/10 rounded-l-lg bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10"
 				>
 					<div class="p-4 py-10 px-5 flex flex-col items-center justify-start h-full gap-4">
-						<div v-if="auth.mode == 'login'">
-							<NuxtImg
-								placeholder
-								src="/images/logo.jpg"
-								preload
-								class="rounded-full aspect-square object-cover mx-auto"
-							/>
-							<h3 class="text-4xl font-bold tracking-wide text-center mb-8 mt-2">
-								Xan nhớ bạn rồi!
-							</h3>
-							<p class="flex items-center justify-center gap-x-1">
-								<UIcon
-									name="i-lucide-message-circle-heart"
-									class="size-5 text-error"
+						<Transition
+							name="fade-slide"
+							mode="out-in"
+						>
+							<div
+								v-if="auth.mode == 'login'"
+								key="login"
+							>
+								<NuxtImg
+									placeholder
+									src="/images/logo.jpg"
+									preload
+									class="rounded-full aspect-square object-cover mx-auto"
 								/>
-								Tiếp tục ăn cùng XAN nhé
-							</p>
-						</div>
-						<div v-else>
-							<NuxtImg
-								placeholder
-								src="/images/logo.jpg"
-								preload
-								class="rounded-full aspect-square object-cover mx-auto my-8"
-							/>
-							<h3 class="text-4xl font-bold tracking-wide text-center mb-8 mt-2">
-								Hi, Chào bạn!
-							</h3>
-							<p class="flex items-center justify-center gap-x-1">
-								<UIcon
-									name="i-lucide-message-circle-heart"
-									class="size-5 text-error"
+								<h3 class="text-4xl font-bold tracking-wide text-center mb-8 mt-2">
+									Xan nhớ bạn rồi!
+								</h3>
+								<p class="flex items-center justify-center gap-x-1">
+									<UIcon
+										name="i-lucide-message-circle-heart"
+										class="size-5 text-error"
+									/>
+									Tiếp tục ăn cùng XAN nhé
+								</p>
+							</div>
+							<div
+								v-else
+								key="signup"
+							>
+								<NuxtImg
+									placeholder
+									src="/images/logo.jpg"
+									preload
+									class="rounded-full aspect-square object-cover mx-auto my-8"
 								/>
-								Xan rất vui khi được phục vụ bạn.
-							</p>
-						</div>
+								<h3 class="text-4xl font-bold tracking-wide text-center mb-8 mt-2">
+									Hi, Chào bạn!
+								</h3>
+								<p class="flex items-center justify-center gap-x-1">
+									<UIcon
+										name="i-lucide-message-circle-heart"
+										class="size-5 text-error"
+									/>
+									Xan rất vui khi được phục vụ bạn.
+								</p>
+							</div>
+						</Transition>
 					</div>
 				</div>
 				<div class="py-4 pr-4 pl-4 md:pl-0">
@@ -73,7 +84,7 @@ const auth = useAuthStore();
 						v-else
 						class="py-5 md:py-10 flex flex-col gap-4"
 					>
-						<SignupForm message="Đặt hàng và nhận nhiều ưu đãi khi đăng ký thành viên" />
+						<SignupForm message="Đăng ký để nhận ưu đãi và theo dõi đơn hàng dễ dàng!" />
 						<USeparator label="Hoặc" />
 						<div>
 							Bạn đã có tài khoản?
@@ -101,3 +112,22 @@ const auth = useAuthStore();
 		</template>
 	</UModal>
 </template>
+
+<style scoped>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-enter-to,
+.fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
