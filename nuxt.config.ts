@@ -2,7 +2,7 @@ export default defineNuxtConfig({
 	modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/ui", "nuxt-swiper", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt"],
 	ssr: true,
 
-	devtools: { enabled: false },
+	devtools: { enabled: true },
 
 	css: ["~/assets/css/main.css"],
 

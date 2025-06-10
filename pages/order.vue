@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { StepperItem, TabsItem } from "@nuxt/ui";
 import type { Dish, SimpleTab, Order } from "@/types/common";
 
+const auth = useAuthStore();
 const user = useUserStore();
 const menu = useMenuStore();
 const toast = useToast();
@@ -39,6 +40,7 @@ const infoTabs = [
 ] satisfies TabsItem[];
 
 const stepper = useTemplateRef("stepper");
+const form = useTemplateRef("form");
 const activeStep = ref<number>(0);
 const activeSet = ref<number>(1);
 const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
@@ -55,6 +57,9 @@ const order = ref<Order>({
 const guestSchema = z.object({
 	guest_name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
 	guest_phone: z.string().regex(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số"),
+	address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
+});
+const authSchema = z.object({
 	address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
 });
 
@@ -128,7 +133,7 @@ const onSelectDish = (dish: Dish, set: number | string | undefined) => {
 
 	selectedDishesOfSet.value[set] = [...selected];
 };
-const onNextStep = () => {
+const onNextStep = async () => {
 	if (stepper.value?.hasNext && activeStep.value === 0) {
 		const allTabsValid = Object.values(selectedDishesOfSet.value).every(dishes => dishes.length >= 3);
 		if (!allTabsValid) {
@@ -140,16 +145,24 @@ const onNextStep = () => {
 			});
 			return;
 		}
+		if (user.isAuthenticated) {
+			order.value.type = "user";
+			order.value.address = user.userAddress ?? "";
+		}
 		stepper.value.next();
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 	else if (stepper.value?.hasNext && activeStep.value === 1) {
-		order.value.dishes = sets.value.map((set) => {
-			const dishes = selectedDishesOfSet.value[set.value] || [];
-			return dishes.map(dish => dish.id);
-		});
-		stepper.value.next();
-		window.scrollTo({ top: 0, behavior: "smooth" });
+		await form.value?.validate();
+
+		if (form.value?.getErrors().length == 0) {
+			order.value.dishes = sets.value.map((set) => {
+				const dishes = selectedDishesOfSet.value[set.value] || [];
+				return dishes.map(dish => dish.id);
+			});
+			stepper.value.next();
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
 	}
 	else if (activeStep.value === 2) {
 		onSubmit();
@@ -158,22 +171,22 @@ const onNextStep = () => {
 const onSubmit = async () => {
 	isSubmitting.value = true;
 	try {
-		const { data, error } = await useFetch("/api/orders", {
-			baseURL: useRuntimeConfig().public.apiBaseUrl,
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: order.value,
-		});
+		// const { data, error } = await useFetch("/api/orders", {
+		// 	baseURL: useRuntimeConfig().public.apiBaseUrl,
+		// 	method: "POST",
+		// 	headers: { "Content-Type": "application/json" },
+		// 	body: order.value,
+		// });
 
-		if (error.value) {
-			toast.add({
-				title: "Uh oh! Có lỗi xảy ra.",
-				description: error.value.data?.message || "Đã có lỗi xảy ra",
-				icon: "i-lucide-wifi",
-				color: "error",
-			});
-			return;
-		}
+		// if (error.value) {
+		// 	toast.add({
+		// 		title: "Uh oh! Có lỗi xảy ra.",
+		// 		description: error.value.data?.message || "Đã có lỗi xảy ra",
+		// 		icon: "i-lucide-wifi",
+		// 		color: "error",
+		// 	});
+		// 	return;
+		// }
 	}
 	catch (err) {
 		console.error(err);
@@ -189,6 +202,9 @@ const onSubmit = async () => {
 	}
 };
 const onGuestSubmit = () => {
+	onNextStep();
+};
+const onAuthSubmit = () => {
 	onNextStep();
 };
 </script>
@@ -257,7 +273,6 @@ const onGuestSubmit = () => {
 											<NuxtImg
 												placeholder
 												:src="dish.image"
-												:alt="dish.name"
 												preload
 												loading="lazy"
 												fit="cover"
@@ -284,6 +299,7 @@ const onGuestSubmit = () => {
 
 					<template #info>
 						<UTabs
+							v-if="!user.isAuthenticated"
 							:items="infoTabs"
 							variant="pill"
 							class="my-5"
@@ -295,6 +311,7 @@ const onGuestSubmit = () => {
 									</p>
 									<div class="w-full max-w-md mx-auto space-y-4 my-4 md:my-8">
 										<UForm
+											ref="form"
 											:state="order"
 											:schema="guestSchema"
 											:validate-on="['blur', 'change', 'input']"
@@ -380,9 +397,137 @@ const onGuestSubmit = () => {
 								</div>
 							</template>
 							<template #user="{ item }">
-								{{ item.description }}
+								<div class="flex flex-col items-center mt-2">
+									<p class="italic text-sm md:text-base text-muted">
+										{{ item.description }}
+									</p>
+									<div class="">
+										<div
+											v-if="auth.mode == 'login'"
+											class="py-5 md:py-10 flex flex-col gap-4"
+										>
+											<LoginForm message="Chào mừng bạn quay trở lại" />
+											<USeparator label="Hoặc" />
+											<div>
+												Bạn chưa có tài khoản? Hãy
+												<UButton
+													color="primary"
+													variant="link"
+													@click="auth.toggleMode()"
+												>
+													Đăng Ký
+												</UButton>
+											</div>
+										</div>
+										<div
+											v-else
+											class="py-5 md:py-10 flex flex-col gap-4"
+										>
+											<SignupForm message="Đăng ký để nhận ưu đãi và theo dõi đơn hàng dễ dàng!" />
+											<USeparator label="Hoặc" />
+											<div>
+												Bạn đã có tài khoản?
+												<UButton
+													color="primary"
+													variant="link"
+													@click="auth.toggleMode()"
+												>
+													Đăng nhập
+												</UButton>
+											</div>
+										</div>
+									</div>
+								</div>
 							</template>
 						</UTabs>
+						<div
+							v-else
+							class="w-full max-w-md mx-auto space-y-4 my-4 md:my-8"
+						>
+							<UForm
+								ref="form"
+								:state="order"
+								:schema="authSchema"
+								:validate-on="['blur', 'change', 'input']"
+								class="mx-auto space-y-4"
+								@submit="onAuthSubmit"
+							>
+								<UFormField
+									label="Tên người nhận"
+									name="name"
+									required
+								>
+									<UInput
+										v-model="user.userFullName"
+										type="text"
+										variant="soft"
+										class="w-full"
+										disabled
+									/>
+								</UFormField>
+								<UFormField
+									label="Số điện thoại"
+									name="username"
+									required
+								>
+									<UInput
+										v-model="user.userUsername"
+										type="tel"
+										variant="soft"
+										class="w-full"
+										disabled
+									/>
+								</UFormField>
+								<UFormField
+									label="Địa chỉ nhận hàng"
+									name="address"
+									required
+								>
+									<UInput
+										v-model="order.address"
+										type="tel"
+										variant="soft"
+										class="w-full"
+										placeholder="Nhập địa chỉ nhận hàng"
+										:ui="{ trailing: 'pe-1' }"
+									>
+										<template
+											v-if="order.address?.length"
+											#trailing
+										>
+											<UButton
+												color="neutral"
+												variant="link"
+												size="sm"
+												icon="i-lucide-circle-x"
+												aria-label="Clear input"
+												@click="order.address = ''"
+											/>
+										</template>
+									</UInput>
+								</UFormField>
+								<UFormField
+									label="Ghi chú"
+									name="notes"
+								>
+									<UTextarea
+										v-model="order.notes"
+										type="tel"
+										variant="soft"
+										class="w-full"
+										placeholder="Bạn có yêu cầu gì không?"
+									/>
+								</UFormField>
+								<div class="flex justify-end my-3 md:my-6">
+									<UButton
+										trailing-icon="i-lucide-arrow-right"
+										type="submit"
+									>
+										Xác nhận đặt hàng
+									</UButton>
+								</div>
+							</UForm>
+						</div>
 					</template>
 
 					<template #confirm>
@@ -507,7 +652,7 @@ const onGuestSubmit = () => {
 							Quay lại
 						</UButton>
 						<div
-							v-if="activeStep < 2"
+							v-if="activeStep < 1"
 							class="flex flex-col md:flex-row gap-x-2 text-center text-sm md:text-base"
 						>
 							<p>Suất {{ activeSet }}:</p>
