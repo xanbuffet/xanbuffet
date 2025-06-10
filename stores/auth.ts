@@ -16,4 +16,8 @@ export const useAuthStore = defineStore("auth", {
 			this.mode = this.mode === "login" ? "signup" : "login";
 		},
 	},
+
+	persist: {
+		storage: piniaPluginPersistedstate.localStorage(),
+	},
 });

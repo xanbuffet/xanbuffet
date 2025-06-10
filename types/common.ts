@@ -3,6 +3,11 @@ export interface User {
 	name: string;
 	username: string;
 	address: string | null;
+	orders_count: number | null;
+}
+
+export interface UserResponse {
+	data: User;
 }
 
 export interface LoginForm {
@@ -24,6 +29,7 @@ export interface AuthResponse {
 		name: string;
 		username: string;
 		address: string | null;
+		orders_count: number;
 	};
 }
 
@@ -51,11 +57,36 @@ export interface SimpleTab {
 	label: string;
 }
 
-export interface Order {
+export interface OrderPayload {
 	type: "guest" | "user";
 	guest_name: string;
 	guest_phone: string;
 	address: string;
 	notes: string;
 	dishes: number[][];
+}
+
+export interface Order {
+	id: number;
+	order_no: string;
+	user_id: number | null;
+	guest_name: string | null;
+	guest_phone: string | null;
+	total_price: number;
+	address: string;
+	notes: string | null;
+	status: string;
+	created_at: string;
+	updated_at: string;
+	dishes: {
+		id: number;
+		name: string;
+		image: string;
+		meal_number: number;
+	}[];
+}
+
+export interface OrderResponse {
+	message: string;
+	order: Order;
 }
