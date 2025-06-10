@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { StepperItem, TabsItem } from "@nuxt/ui";
-import type { Dish, SimpleTab, Order } from "@/types/common";
+import type { Dish, SimpleTab, OrderPayload, OrderResponse } from "@/types/common";
+import { useCopy } from "~/composables/useCopy";
 
+const { copyText } = useCopy();
 const auth = useAuthStore();
 const user = useUserStore();
 const menu = useMenuStore();
 const toast = useToast();
-const isSubmitting = ref<boolean>(false);
+const isSubmitting = ref(false);
+const isOderSuccess = ref(false);
+const orderCopied = ref(false);
 
 const steps: StepperItem[] = [
 	{
@@ -26,19 +30,21 @@ const steps: StepperItem[] = [
 		icon: "i-lucide-check-circle",
 	},
 ];
-const infoTabs = [
+const checkoutModeTabs = [
 	{
+		value: "0",
 		label: "Đặt hàng nhanh",
 		description: "Tạo đơn hàng nhanh chóng, sử dụng mã đơn để theo dõi đơn hàng",
 		slot: "guest" as const,
 	},
 	{
-		label: "Đăng nhập/Đăng ký",
+		value: "1",
+		label: "Thành viên",
 		description: "Đăng ký/Đăng nhập để nhận ưu đãi và theo dõi đơn hàng dễ dàng!",
 		slot: "user" as const,
 	},
 ] satisfies TabsItem[];
-
+const checkoutMode = ref<string>("0");
 const stepper = useTemplateRef("stepper");
 const form = useTemplateRef("form");
 const activeStep = ref<number>(0);
@@ -46,14 +52,15 @@ const activeSet = ref<number>(1);
 const sets = ref<SimpleTab[]>([{ value: 1, label: "Suất 1" }]);
 
 const dishesOfSet = ref<Dish[][]>([]);
-const order = ref<Order>({
+const order = ref<OrderPayload>({
 	type: "guest",
 	guest_name: "",
 	guest_phone: "",
-	address: "",
+	address: user.userAddress ?? "",
 	notes: "",
 	dishes: [],
 });
+const orderRes = ref<OrderResponse | null>(null);
 const guestSchema = z.object({
 	guest_name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
 	guest_phone: z.string().regex(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số"),
@@ -70,9 +77,40 @@ watch(
 	},
 	{ deep: true },
 );
+watch(
+	() => user.isAuthenticated,
+	(newState) => {
+		if (newState) {
+			order.value.address = user.userAddress ?? "";
+		}
+		else {
+			order.value.guest_name = "";
+			order.value.guest_phone = "";
+		}
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	},
+	{ deep: true },
+);
+watch(
+	() => checkoutMode.value,
+	(newValue) => {
+		if (newValue == "0") {
+			order.value.type = "guest";
+			order.value.address = "";
+		}
+		else {
+			order.value.type = "user";
+			order.value.address = user.userAddress ?? "";
+		}
+	},
+	{ deep: true },
+);
 
 onMounted(() => {
 	menu.fetchMenu();
+	if (user.isAuthenticated) {
+		checkoutMode.value = "1";
+	}
 });
 
 const onAddSet = () => {
@@ -145,14 +183,19 @@ const onNextStep = async () => {
 			});
 			return;
 		}
-		if (user.isAuthenticated) {
-			order.value.type = "user";
-			order.value.address = user.userAddress ?? "";
-		}
+
 		stepper.value.next();
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 	else if (stepper.value?.hasNext && activeStep.value === 1) {
+		if (checkoutMode.value == "1" && !user.isAuthenticated) {
+			toast.add({
+				title: "Oh! Bạn cần đăng nhập/đăng ký để tiếp tục.",
+				icon: "i-lucide-fish-off",
+				color: "warning",
+			});
+			return;
+		}
 		await form.value?.validate();
 
 		if (form.value?.getErrors().length == 0) {
@@ -165,28 +208,34 @@ const onNextStep = async () => {
 		}
 	}
 	else if (activeStep.value === 2) {
-		onSubmit();
+		onOrderSubmit();
 	}
 };
-const onSubmit = async () => {
+const onOrderSubmit = async () => {
 	isSubmitting.value = true;
+	isOderSuccess.value = false;
 	try {
-		// const { data, error } = await useFetch("/api/orders", {
-		// 	baseURL: useRuntimeConfig().public.apiBaseUrl,
-		// 	method: "POST",
-		// 	headers: { "Content-Type": "application/json" },
-		// 	body: order.value,
-		// });
+		const { data, error } = await useFetch<OrderResponse>("/api/orders", {
+			baseURL: useRuntimeConfig().public.apiBaseUrl,
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: order.value,
+			credentials: "include",
+		});
+		if (data.value) {
+			orderRes.value = data.value;
+			isOderSuccess.value = true;
+		}
 
-		// if (error.value) {
-		// 	toast.add({
-		// 		title: "Uh oh! Có lỗi xảy ra.",
-		// 		description: error.value.data?.message || "Đã có lỗi xảy ra",
-		// 		icon: "i-lucide-wifi",
-		// 		color: "error",
-		// 	});
-		// 	return;
-		// }
+		if (error.value) {
+			toast.add({
+				title: "Uh oh! Có lỗi xảy ra.",
+				description: error.value.data?.message || "Đã có lỗi xảy ra",
+				icon: "i-lucide-wifi",
+				color: "error",
+			});
+			return;
+		}
 	}
 	catch (err) {
 		console.error(err);
@@ -216,6 +265,7 @@ const onAuthSubmit = () => {
 				<UStepper
 					ref="stepper"
 					v-model="activeStep"
+					as="div"
 					disabled
 					:items="steps"
 				>
@@ -299,8 +349,8 @@ const onAuthSubmit = () => {
 
 					<template #info>
 						<UTabs
-							v-if="!user.isAuthenticated"
-							:items="infoTabs"
+							v-model="checkoutMode"
+							:items="checkoutModeTabs"
 							variant="pill"
 							class="my-5"
 						>
@@ -351,7 +401,6 @@ const onAuthSubmit = () => {
 											>
 												<UInput
 													v-model="order.address"
-													type="tel"
 													variant="soft"
 													class="w-full"
 													placeholder="Nhập địa chỉ nhận hàng"
@@ -397,16 +446,22 @@ const onAuthSubmit = () => {
 								</div>
 							</template>
 							<template #user="{ item }">
-								<div class="flex flex-col items-center mt-2">
+								<div
+									v-if="!user.isAuthenticated"
+									class="flex flex-col items-center mt-2"
+								>
 									<p class="italic text-sm md:text-base text-muted">
 										{{ item.description }}
 									</p>
-									<div class="">
+									<div class="w-full max-w-md ">
 										<div
 											v-if="auth.mode == 'login'"
 											class="py-5 md:py-10 flex flex-col gap-4"
 										>
-											<LoginForm message="Chào mừng bạn quay trở lại" />
+											<LoginForm
+												redirect-url="/order"
+												message="Chào mừng bạn quay trở lại"
+											/>
 											<USeparator label="Hoặc" />
 											<div>
 												Bạn chưa có tài khoản? Hãy
@@ -423,7 +478,10 @@ const onAuthSubmit = () => {
 											v-else
 											class="py-5 md:py-10 flex flex-col gap-4"
 										>
-											<SignupForm message="Đăng ký để nhận ưu đãi và theo dõi đơn hàng dễ dàng!" />
+											<SignupForm
+												redirect-url="/order"
+												message="Đăng ký để nhận ưu đãi và theo dõi đơn hàng dễ dàng!"
+											/>
 											<USeparator label="Hoặc" />
 											<div>
 												Bạn đã có tài khoản?
@@ -438,96 +496,96 @@ const onAuthSubmit = () => {
 										</div>
 									</div>
 								</div>
+								<div
+									v-else
+									class="w-full max-w-md mx-auto space-y-4 my-4 md:my-8"
+								>
+									<UForm
+										ref="form"
+										:state="order"
+										:schema="authSchema"
+										:validate-on="['blur', 'change', 'input']"
+										class="mx-auto space-y-4"
+										@submit="onAuthSubmit"
+									>
+										<UFormField
+											label="Tên người nhận"
+											name="name"
+											required
+										>
+											<UInput
+												v-model="user.userFullName"
+												type="text"
+												variant="soft"
+												class="w-full"
+												disabled
+											/>
+										</UFormField>
+										<UFormField
+											label="Số điện thoại"
+											name="username"
+											required
+										>
+											<UInput
+												v-model="user.userUsername"
+												type="tel"
+												variant="soft"
+												class="w-full"
+												disabled
+											/>
+										</UFormField>
+										<UFormField
+											label="Địa chỉ nhận hàng"
+											name="address"
+											required
+										>
+											<UInput
+												v-model="order.address"
+												type="tel"
+												variant="soft"
+												class="w-full"
+												placeholder="Nhập địa chỉ nhận hàng"
+												:ui="{ trailing: 'pe-1' }"
+											>
+												<template
+													v-if="order.address?.length"
+													#trailing
+												>
+													<UButton
+														color="neutral"
+														variant="link"
+														size="sm"
+														icon="i-lucide-circle-x"
+														aria-label="Clear input"
+														@click="order.address = ''"
+													/>
+												</template>
+											</UInput>
+										</UFormField>
+										<UFormField
+											label="Ghi chú"
+											name="notes"
+										>
+											<UTextarea
+												v-model="order.notes"
+												type="tel"
+												variant="soft"
+												class="w-full"
+												placeholder="Bạn có yêu cầu gì không?"
+											/>
+										</UFormField>
+										<div class="flex justify-end my-3 md:my-6">
+											<UButton
+												trailing-icon="i-lucide-arrow-right"
+												type="submit"
+											>
+												Xác nhận đặt hàng
+											</UButton>
+										</div>
+									</UForm>
+								</div>
 							</template>
 						</UTabs>
-						<div
-							v-else
-							class="w-full max-w-md mx-auto space-y-4 my-4 md:my-8"
-						>
-							<UForm
-								ref="form"
-								:state="order"
-								:schema="authSchema"
-								:validate-on="['blur', 'change', 'input']"
-								class="mx-auto space-y-4"
-								@submit="onAuthSubmit"
-							>
-								<UFormField
-									label="Tên người nhận"
-									name="name"
-									required
-								>
-									<UInput
-										v-model="user.userFullName"
-										type="text"
-										variant="soft"
-										class="w-full"
-										disabled
-									/>
-								</UFormField>
-								<UFormField
-									label="Số điện thoại"
-									name="username"
-									required
-								>
-									<UInput
-										v-model="user.userUsername"
-										type="tel"
-										variant="soft"
-										class="w-full"
-										disabled
-									/>
-								</UFormField>
-								<UFormField
-									label="Địa chỉ nhận hàng"
-									name="address"
-									required
-								>
-									<UInput
-										v-model="order.address"
-										type="tel"
-										variant="soft"
-										class="w-full"
-										placeholder="Nhập địa chỉ nhận hàng"
-										:ui="{ trailing: 'pe-1' }"
-									>
-										<template
-											v-if="order.address?.length"
-											#trailing
-										>
-											<UButton
-												color="neutral"
-												variant="link"
-												size="sm"
-												icon="i-lucide-circle-x"
-												aria-label="Clear input"
-												@click="order.address = ''"
-											/>
-										</template>
-									</UInput>
-								</UFormField>
-								<UFormField
-									label="Ghi chú"
-									name="notes"
-								>
-									<UTextarea
-										v-model="order.notes"
-										type="tel"
-										variant="soft"
-										class="w-full"
-										placeholder="Bạn có yêu cầu gì không?"
-									/>
-								</UFormField>
-								<div class="flex justify-end my-3 md:my-6">
-									<UButton
-										trailing-icon="i-lucide-arrow-right"
-										type="submit"
-									>
-										Xác nhận đặt hàng
-									</UButton>
-								</div>
-							</UForm>
-						</div>
 					</template>
 
 					<template #confirm>
@@ -539,7 +597,7 @@ const onAuthSubmit = () => {
 									color="primary"
 									size="lg"
 									class="w-full justify-center flex"
-									@click="onSubmit"
+									@click="onOrderSubmit"
 								>
 									Hoàn Tất Đặt Hàng
 								</UButton>
@@ -594,13 +652,13 @@ const onAuthSubmit = () => {
 									/>
 									<div class="overflow-hidden flex-1">
 										<p class="font-bold">
-											{{ user.userFullName }}
+											{{ checkoutMode == "0" ? order.guest_name : user.userFullName }}
 										</p>
 										<p class="text-muted">
-											{{ user.userUsername }}
+											{{ checkoutMode == "0" ? order.guest_phone : user.userUsername }}
 										</p>
 										<p class="text-muted">
-											{{ order.address }}
+											{{ checkoutMode == "0" ? order.address : user.userAddress }}
 										</p>
 										<p
 											v-if="order.notes"
@@ -610,7 +668,7 @@ const onAuthSubmit = () => {
 										</p>
 									</div>
 								</div>
-								<div class="flex gap-x-3 mt-2 md:mt-4">
+								<div class="flex gap-x-3 mt-3 md:mt-6">
 									<UIcon
 										name="i-lucide-receipt-text"
 										class="mt-1 text-primary size-5"
@@ -632,8 +690,8 @@ const onAuthSubmit = () => {
 									icon="i-lucide-circle-check-big"
 									color="primary"
 									size="lg"
-									class="w-full mt-5 justify-center hidden md:flex"
-									@click="onSubmit"
+									class="w-full mt-8 justify-center hidden md:flex hover:cursor-pointer"
+									@click="onOrderSubmit"
 								>
 									Hoàn Tất Đặt Hàng
 								</UButton>
@@ -668,6 +726,61 @@ const onAuthSubmit = () => {
 					</div>
 				</div>
 			</section>
+			<UModal
+				v-model:open="isSubmitting"
+				:dismissible="false"
+			>
+				<template #content>
+					<div class="p-6">
+						<h2 class="text-lg font-semibold">
+							Đang xử lý đơn hàng...
+						</h2>
+						<UProgress
+							:value="null"
+							animation="carousel"
+							class="my-4"
+						/>
+						<p>Vui lòng chờ trong giây lát.</p>
+					</div>
+				</template>
+			</UModal>
+			<UModal
+				v-model:open="isOderSuccess"
+				title="Tạo đơn hàng thành công"
+				:ui="{ footer: 'justify-end' }"
+				:dismissible="false"
+			>
+				<template #body>
+					<div class="flex flex-col">
+						<p>Cảm ơn bạn, đơn hàng đang được quán chuẩn bị và giao tới cho bạn sớm nhất.</p>
+						<p class="my-4">
+							Mã đơn hàng của bạn là: {{ orderRes?.order.order_no }}
+						</p>
+						<span class="text-sm text-right">Ấn để copy</span>
+						<UButton
+							color="success"
+							variant="subtle"
+							:trailing-icon="orderCopied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
+							class="w-full justify-center"
+							@click="copyText(orderRes?.order.order_no ?? '')"
+						>
+							{{ orderRes?.order.order_no }}
+						</UButton>
+					</div>
+				</template>
+				<template #footer>
+					<UButton
+						label="Về trang chủ"
+						color="neutral"
+						variant="outline"
+						to="/"
+					/>
+					<UButton
+						label="Kiểm tra đơn hàng"
+						color="neutral"
+					/>
+				</template>
+			</UModal>
 		</div>
 	</div>
 </template>

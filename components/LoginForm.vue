@@ -40,14 +40,11 @@ const onLogin = async (): Promise<void> => {
 		});
 
 		if (data.value) {
-			user.setUser({
-				id: data.value.data.id,
-				name: data.value.data.name,
-				username: data.value.data.username,
-				address: data.value.data.address,
-			});
+			user.setUser(data.value.data);
 
 			auth.isVisible = false;
+
+			refreshCookie("xan_buffet_session");
 
 			await navigateTo(props.redirectUrl ?? "/");
 		}

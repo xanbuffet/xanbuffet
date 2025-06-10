@@ -2,7 +2,7 @@ export default defineNuxtConfig({
 	modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/ui", "nuxt-swiper", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt"],
 	ssr: true,
 
-	devtools: { enabled: true },
+	devtools: { enabled: false },
 
 	css: ["~/assets/css/main.css"],
 
@@ -10,6 +10,9 @@ export default defineNuxtConfig({
 		public: {
 			apiBaseUrl: process.env.API_BASE_URL || "https://localhost:8000",
 		},
+	},
+	experimental: {
+		cookieStore: true,
 	},
 	compatibilityDate: "2025-05-25",
 

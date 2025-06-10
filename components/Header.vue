@@ -46,7 +46,7 @@ const userMenuItems: DropdownMenuItem[] = [
 	{
 		label: "Profile",
 		icon: "i-lucide-user",
-		to: "/user",
+		to: "/user/profile",
 	}, {
 		label: "Đơn hàng",
 		icon: "i-lucide-shopping-cart",
@@ -60,8 +60,8 @@ const userMenuItems: DropdownMenuItem[] = [
 	},
 ];
 
-const open = ref(false);
-const openUserMenu = ref(false);
+const open = ref<boolean>(false);
+const openUserMenu = ref<boolean>(false);
 </script>
 
 <template>
