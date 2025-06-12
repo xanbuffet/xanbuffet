@@ -129,6 +129,7 @@ const onLogin = async (): Promise<void> => {
 				</UInput>
 			</UFormField>
 			<UButton
+				:disabled="isLoading"
 				type="submit"
 				class="w-full justify-center hover:cursor-pointer"
 			>

@@ -179,6 +179,7 @@ const onSignup = async (): Promise<void> => {
 				</UInput>
 			</UFormField>
 			<UButton
+				:disabled="isisLoading"
 				type="submit"
 				class="w-full justify-center hover:cursor-pointer"
 			>
