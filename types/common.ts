@@ -75,7 +75,7 @@ export interface Order {
 	total_price: number;
 	address: string;
 	notes: string | null;
-	status: string;
+	status: "pending" | "processing" | "completed" | "cancelled" | "shipping";
 	created_at: string;
 	updated_at: string;
 	dishes: {

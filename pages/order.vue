@@ -778,6 +778,7 @@ const onAuthSubmit = () => {
 					<UButton
 						label="Kiểm tra đơn hàng"
 						color="neutral"
+						:to="user.isAuthenticated ? '/user/order' : '/tracking'"
 					/>
 				</template>
 			</UModal>

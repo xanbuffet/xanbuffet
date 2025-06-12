@@ -30,16 +30,35 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 		onSelect: () => open.value = false,
 	},
 	{
-		label: "TikTok",
-		icon: "i-logos-tiktok-icon",
-		to: "https://tiktok.com/@xanbuffetcomnha35k",
-		target: "_blank",
+		label: "Tracking",
+		icon: "i-lucide-package-search",
+		onSelect: () => {
+			open.value = false;
+			if (user.isAuthenticated) {
+				return navigateTo("/user/order");
+			}
+			else {
+				return navigateTo("tracking");
+			}
+		},
 	},
 	{
-		label: "Facebook",
-		icon: "i-logos-facebook",
-		to: "https://facebook.com/@xanbuffetcomnha35k",
-		target: "_blank",
+		label: "Liên hệ",
+		icon: "i-lucide-hand-heart",
+		children: [
+			{
+				label: "TikTok",
+				icon: "i-logos-tiktok-icon",
+				to: "https://tiktok.com/@xanbuffetcomnha35k",
+				target: "_blank",
+			},
+			{
+				label: "Facebook",
+				icon: "i-logos-facebook",
+				to: "https://facebook.com/@xanbuffetcomnha35k",
+				target: "_blank",
+			},
+		],
 	},
 ]);
 const userMenuItems: DropdownMenuItem[] = [
