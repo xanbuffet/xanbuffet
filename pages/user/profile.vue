@@ -25,25 +25,23 @@ const userInfoSchema = z.object({
 	address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
 });
 const userPwForm = ref({
-	current_pw: "",
-	new_pw: "",
-	confirm_new_pw: "",
+	current_password: "",
+	new_password: "",
+	new_password_confirmation: "",
 });
 const userPwSchema = z.object({
-	current_pw: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-	new_pw: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-	confirm_new_pw: z.string().min(6, "Xác nhận mật khẩu phải có ít nhất 6 ký tự"),
-}).refine(data => data.new_pw === data.confirm_new_pw, {
+	current_password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+	new_password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+	new_password_confirmation: z.string().min(6, "Xác nhận mật khẩu phải có ít nhất 6 ký tự"),
+}).refine(data => data.new_password === data.new_password_confirmation, {
 	message: "Mật khẩu và xác nhận mật khẩu không khớp",
-	path: ["confirm_new_pw"],
+	path: ["new_password_confirmation"],
 });
 
 const userInfoFormRef = useTemplateRef("userInfoFormRef");
 const userPwFormRef = useTemplateRef("userPwFormRef");
 
 const onUpdateInfo = async () => {
-	const isAuth = await user.checkAuth();
-	console.log(isAuth);
 	if (userInfoFormRef.value?.dirtyFields.size == 0) {
 		toast.add({
 			title: "Không cần cập nhật",
@@ -66,7 +64,6 @@ const onUpdateInfo = async () => {
 			user.setUser(data.value.data);
 			toast.add({
 				title: data.value.message,
-				description: "Hãy kiểm tra các thay đổi để xác nhận",
 				color: "success",
 			});
 		}
@@ -93,8 +90,50 @@ const onUpdateInfo = async () => {
 		isLoading.value = false;
 	}
 };
-const onUpdatePassword = () => {
+const onUpdatePassword = async () => {
+	isLoading.value = true;
+	try {
+		const { data, error } = await useFetch<{ message: string }>(`/api/users/${user.userUsername}/password_change`, {
+			baseURL: useRuntimeConfig().public.apiBaseUrl,
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: userPwForm.value,
+			credentials: "include",
+		});
 
+		if (data.value) {
+			userPwForm.value = {
+				current_password: "",
+				new_password: "",
+				new_password_confirmation: "",
+			};
+			toast.add({
+				title: data.value.message,
+				color: "success",
+			});
+		}
+
+		if (error.value) {
+			toast.add({
+				title: "Oh! Cập nhật thất bại",
+				description: error.value.data?.message || "Đã có lỗi xảy ra",
+				color: "error",
+			});
+			return;
+		}
+	}
+	catch (err) {
+		console.log(err);
+		toast.add({
+			title: "Oh! Cập nhật thất bại",
+			description: "Không thể kết nối đến server",
+			color: "error",
+		});
+		return;
+	}
+	finally {
+		isLoading.value = false;
+	}
 };
 </script>
 
@@ -203,16 +242,16 @@ const onUpdatePassword = () => {
 					class="mx-auto space-y-4 my-3 md:my-6"
 					:schema="userPwSchema"
 					:state="userPwForm"
-					:validate-on="[]"
+					:validate-on="['change', 'input']"
 					@submit="onUpdatePassword"
 				>
 					<UFormField
 						label="Mật khẩu hiện tại"
 						required
-						name="current_pw"
+						name="current_password"
 					>
 						<UInput
-							v-model="userPwForm.current_pw"
+							v-model="userPwForm.current_password"
 							placeholder="Nhập mật khẩu hiện tại"
 							variant="soft"
 							class="w-full"
@@ -236,10 +275,10 @@ const onUpdatePassword = () => {
 					<UFormField
 						label="Mật khẩu mới"
 						required
-						name="new_pw"
+						name="new_password"
 					>
 						<UInput
-							v-model="userPwForm.new_pw"
+							v-model="userPwForm.new_password"
 							placeholder="Nhập mật khẩu mới"
 							variant="soft"
 							class="w-full"
@@ -263,10 +302,10 @@ const onUpdatePassword = () => {
 					<UFormField
 						label="Xác nhận mật khẩu"
 						required
-						name="confirm_new_pw"
+						name="new_password_confirmation"
 					>
 						<UInput
-							v-model="userPwForm.confirm_new_pw"
+							v-model="userPwForm.new_password_confirmation"
 							placeholder="Nhập lại mật khẩu"
 							variant="soft"
 							class="w-full"
@@ -288,8 +327,12 @@ const onUpdatePassword = () => {
 						</UInput>
 					</UFormField>
 					<div class="flex justify-end my-3 md:my-6">
-						<UButton type="submit">
-							Xác Nhận
+						<UButton
+							type="submit"
+							color="warning"
+							:disabled="isLoading"
+						>
+							{{ isLoading ? 'Đang xử lý...' : 'Xác Nhận' }}
 						</UButton>
 					</div>
 				</UForm>

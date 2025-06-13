@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { StepperItem, TabsItem } from "@nuxt/ui";
-import type { Dish, SimpleTab, OrderPayload, OrderResponse } from "@/types/common";
+import type { Dish, SimpleTab, OrderPayload, OrderResponse, Order } from "@/types/common";
 import { useCopy } from "~/composables/useCopy";
 
 const { copyText } = useCopy();
@@ -60,7 +60,7 @@ const order = ref<OrderPayload>({
 	notes: "",
 	dishes: [],
 });
-const orderRes = ref<OrderResponse | null>(null);
+const orderRes = ref<Order | null>(null);
 const guestSchema = z.object({
 	guest_name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
 	guest_phone: z.string().regex(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số"),
@@ -223,7 +223,7 @@ const onOrderSubmit = async () => {
 			credentials: "include",
 		});
 		if (data.value) {
-			orderRes.value = data.value;
+			orderRes.value = data.value.order[0];
 			isOderSuccess.value = true;
 		}
 
@@ -754,7 +754,7 @@ const onAuthSubmit = () => {
 					<div class="flex flex-col">
 						<p>Cảm ơn bạn, đơn hàng đang được quán chuẩn bị và giao tới cho bạn sớm nhất.</p>
 						<p class="my-4">
-							Mã đơn hàng của bạn là: {{ orderRes?.order.order_no }}
+							Mã đơn hàng của bạn là: {{ orderRes?.order_no }}
 						</p>
 						<span class="text-sm text-right">Ấn để copy</span>
 						<UButton
@@ -762,9 +762,9 @@ const onAuthSubmit = () => {
 							variant="subtle"
 							:trailing-icon="orderCopied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
 							class="w-full justify-center"
-							@click="copyText(orderRes?.order.order_no ?? '')"
+							@click="copyText(orderRes?.order_no ?? '')"
 						>
-							{{ orderRes?.order.order_no }}
+							{{ orderRes?.order_no }}
 						</UButton>
 					</div>
 				</template>

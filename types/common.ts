@@ -88,5 +88,5 @@ export interface Order {
 
 export interface OrderResponse {
 	message: string;
-	order: Order;
+	order: Order[];
 }

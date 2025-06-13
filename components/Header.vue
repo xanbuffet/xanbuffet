@@ -58,6 +58,13 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 				to: "https://facebook.com/@xanbuffetcomnha35k",
 				target: "_blank",
 			},
+			{
+				label: "Zalo",
+				icon: "i-simple-icons-zalo",
+				badge: "0927733111",
+				to: "https://zalo.me/0927733111",
+				target: "_blank",
+			},
 		],
 	},
 ]);

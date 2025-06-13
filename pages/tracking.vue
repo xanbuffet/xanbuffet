@@ -35,7 +35,7 @@ const onTracking = async () => {
 		}
 
 		if (data.value) {
-			order.value = data.value.order;
+			order.value = data.value.order[0];
 			message.value = data.value.message;
 		}
 	}
@@ -131,8 +131,10 @@ const groupDishesBySet = (dishes: Order["dishes"]) => {
 			</UFormField>
 			<div class="md:col-span-2 md:col-start-5 w-full flex items-center justify-end">
 				<UButton
+					:disabled="isLoading"
 					trailing-icon="i-lucide:package-search"
 					type="submit"
+					class="hover:cursor-pointer"
 				>
 					Kiểm Tra
 				</UButton>
@@ -144,6 +146,7 @@ const groupDishesBySet = (dishes: Order["dishes"]) => {
 				class="text-center"
 			>
 				<UProgress
+					:value="null"
 					animation="carousel"
 					class="mx-auto w-32"
 				/>
@@ -164,7 +167,9 @@ const groupDishesBySet = (dishes: Order["dishes"]) => {
 				v-else-if="order"
 				class="space-y-4"
 			>
-				<UCard>
+				<UCard
+					:ui="{ body: 'px-2 py-4 sm:px-4' }"
+				>
 					<template #header>
 						<div class="flex justify-between items-center">
 							<h3 class="text-lg font-semibold">
@@ -180,29 +185,29 @@ const groupDishesBySet = (dishes: Order["dishes"]) => {
 					</template>
 
 					<div class="space-y-4">
-						<div>
-							<span class="text-muted">Mã đơn hàng:</span>
-							<span class="font-medium ml-3">{{ order.order_no }}</span>
+						<div class="flex items-start mb-2">
+							<span class="text-muted w-32 md:w-40 text-left">Mã đơn hàng:</span>
+							<span class="font-medium">{{ order.order_no }}</span>
 						</div>
-						<div>
-							<span class="text-muted">Trạng thái:</span>
+						<div class="flex items-start mb-2">
+							<span class="text-muted w-32 md:w-40 text-left">Trạng thái:</span>
 							<UBadge
-								class="ml-3"
+								class="ml-0"
 								:color="getStatusDisplay(order.status).color"
 							>
 								{{ getStatusDisplay(order.status).label }}
 							</UBadge>
 						</div>
-						<div>
-							<span class="text-muted">Thành tiền:</span>
-							<span class="font-medium ml-3">{{ new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(order.total_price) }}</span>
+						<div class="flex items-start mb-2">
+							<span class="text-muted w-32 md:w-40 text-left">Thành tiền:</span>
+							<span class="font-medium">{{ new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(order.total_price) }}</span>
+						</div>
+						<div class="flex items-start mb-2">
+							<span class="text-muted w-32 md:w-40 text-left">Ngày đặt:</span>
+							<span class="font-medium">{{ formatTime(order.created_at) }}</span>
 						</div>
 						<div>
-							<span class="text-muted">Ngày đặt:</span>
-							<span class="font-medium ml-3">{{ formatTime(order.created_at) }}</span>
-						</div>
-						<div>
-							<span class="">Danh sách món ăn:</span>
+							<span class="text-muted">Chi tiết món ăn:</span>
 							<ul class="list-disc pl-5 mt-2">
 								<li
 									v-for="{ meal, names } in groupDishesBySet(order.dishes)"
