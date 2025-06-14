@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TabsItem, BadgeProps } from "@nuxt/ui";
-import type { OrderResponse, Order } from "@/types/common";
+import type { Order } from "@/types/common";
 
 definePageMeta({
 	middleware: ["auth"],

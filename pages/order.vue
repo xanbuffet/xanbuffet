@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { StepperItem, TabsItem } from "@nuxt/ui";
-import type { Dish, SimpleTab, OrderPayload, OrderResponse, Order } from "@/types/common";
+import type { Dish, SimpleTab, OrderPayload, Order } from "@/types/common";
 import { useCopy } from "~/composables/useCopy";
 
 const { copyText } = useCopy();
@@ -215,7 +215,7 @@ const onOrderSubmit = async () => {
 	isSubmitting.value = true;
 	isOderSuccess.value = false;
 	try {
-		const { data, error } = await useFetch<OrderResponse>("/api/orders", {
+		const { data, error } = await useFetch<{ message: string; order: Order }>("/api/orders", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -223,7 +223,7 @@ const onOrderSubmit = async () => {
 			credentials: "include",
 		});
 		if (data.value) {
-			orderRes.value = data.value.order[0];
+			orderRes.value = data.value.order;
 			isOderSuccess.value = true;
 		}
 
@@ -592,7 +592,7 @@ const onAuthSubmit = () => {
 						<div class="flex flex-col-reverse md:flex-row items-start gap-4 my-4 md:my-8">
 							<div class="block md:hidden w-full flex-none">
 								<UButton
-									:disabled="isSubmitting"
+									:disabled="isSubmitting || isOderSuccess"
 									icon="i-lucide-circle-check-big"
 									color="primary"
 									size="lg"
@@ -686,7 +686,7 @@ const onAuthSubmit = () => {
 									</div>
 								</div>
 								<UButton
-									:disabled="isSubmitting"
+									:disabled="isSubmitting || isOderSuccess"
 									icon="i-lucide-circle-check-big"
 									color="primary"
 									size="lg"
@@ -717,7 +717,7 @@ const onAuthSubmit = () => {
 							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
 						</div>
 						<UButton
-							:disabled="isSubmitting"
+							:disabled="isSubmitting || isOderSuccess"
 							trailing-icon="i-lucide-arrow-right"
 							@click="onNextStep"
 						>
@@ -749,6 +749,7 @@ const onAuthSubmit = () => {
 				title="Tạo đơn hàng thành công"
 				:ui="{ footer: 'justify-end' }"
 				:dismissible="false"
+				@close:prevent="navigateTo('/tracking')"
 			>
 				<template #body>
 					<div class="flex flex-col">

@@ -32,20 +32,20 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 	{
 		label: "Tracking",
 		icon: "i-lucide-package-search",
-		onSelect: () => {
-			open.value = false;
-			if (user.isAuthenticated) {
-				return navigateTo("/user/order");
-			}
-			else {
-				return navigateTo("tracking");
-			}
-		},
+		to: "/tracking",
+		onSelect: () => open.value = false,
 	},
 	{
 		label: "Liên hệ",
 		icon: "i-lucide-hand-heart",
 		children: [
+			{
+				label: "Zalo",
+				icon: "i-simple-icons-zalo",
+				badge: "0927733111",
+				to: "https://zalo.me/0927733111",
+				target: "_blank",
+			},
 			{
 				label: "TikTok",
 				icon: "i-logos-tiktok-icon",
@@ -56,13 +56,6 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 				label: "Facebook",
 				icon: "i-logos-facebook",
 				to: "https://facebook.com/@xanbuffetcomnha35k",
-				target: "_blank",
-			},
-			{
-				label: "Zalo",
-				icon: "i-simple-icons-zalo",
-				badge: "0927733111",
-				to: "https://zalo.me/0927733111",
 				target: "_blank",
 			},
 		],

@@ -7,7 +7,7 @@ const schema = z.object({
 	username: z.string().regex(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số"),
 	order_no: z.string().min(4, "Mã đơn hàng phải có ít nhất 4 ký tự"),
 });
-const form = ref({ username: "0927733111", order_no: "XAN_ckWwDJTq" });
+const form = ref({ username: "", order_no: "" });
 
 const isLoading = ref<boolean>(false);
 const message = ref<string | null>(null);
