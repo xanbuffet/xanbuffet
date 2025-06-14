@@ -28,7 +28,7 @@ export const useUserStore = defineStore("user", {
 		},
 		async checkAuth() {
 			try {
-				const { data, error } = await useFetch<UserResponse>("/api/users", {
+				const data = await $fetch<UserResponse>("/api/users", {
 					baseURL: useRuntimeConfig().public.apiBaseUrl,
 					credentials: "include",
 					headers: {
@@ -36,19 +36,13 @@ export const useUserStore = defineStore("user", {
 					},
 				});
 
-				if (error.value) {
-					if (error.value.statusCode === 401 || error.value.statusCode === 419) {
-						await this.logout();
-						return false;
-					}
-				}
-
-				if (data.value?.data) {
-					this.setUser(data.value.data);
+				if (data) {
+					this.setUser(data.data);
 					return true;
 				}
 			}
 			catch (err) {
+				await this.logout();
 				console.error("Auth check failed:", err);
 				this.user = null;
 				return false;
@@ -69,7 +63,7 @@ export const useUserStore = defineStore("user", {
 				});
 
 				this.user = null;
-				return true;
+				return navigateTo("/");
 			}
 			catch (err) {
 				console.error("Logout failed:", err);

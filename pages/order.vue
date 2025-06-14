@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { StepperItem, TabsItem } from "@nuxt/ui";
-import type { Dish, SimpleTab, OrderPayload, Order } from "@/types/common";
+import type { Dish, SimpleTab, OrderPayload, Order, PlacedOrderResponse } from "@/types/common";
 import { useCopy } from "~/composables/useCopy";
 
 const { copyText } = useCopy();
 const auth = useAuthStore();
 const user = useUserStore();
 const menu = useMenuStore();
+const orderStore = useOrderStore();
 const toast = useToast();
 const isSubmitting = ref(false);
 const isOderSuccess = ref(false);
@@ -215,7 +216,7 @@ const onOrderSubmit = async () => {
 	isSubmitting.value = true;
 	isOderSuccess.value = false;
 	try {
-		const { data, error } = await useFetch<{ message: string; order: Order }>("/api/orders", {
+		const { data, error } = await useFetch<PlacedOrderResponse>("/api/orders", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -223,8 +224,12 @@ const onOrderSubmit = async () => {
 			credentials: "include",
 		});
 		if (data.value) {
-			orderRes.value = data.value.order;
+			orderRes.value = data.value.data;
 			isOderSuccess.value = true;
+			orderStore.setTracking({
+				phone: orderRes.value.user?.username || orderRes.value.guest_phone || "",
+				order_no: orderRes.value.order_no,
+			});
 		}
 
 		if (error.value) {

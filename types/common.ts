@@ -70,6 +70,7 @@ export interface Order {
 	id: number;
 	order_no: string;
 	user_id: number | null;
+	user: User | null;
 	guest_name: string | null;
 	guest_phone: string | null;
 	total_price: number;
@@ -86,7 +87,22 @@ export interface Order {
 	}[];
 }
 
+export interface TrackingOrderResponse {
+	message: string;
+	data: Order;
+}
+
 export interface OrderResponse {
 	message: string;
-	order: Order[];
+	data: Order[];
+}
+
+export interface PlacedOrderResponse {
+	message: string;
+	data: Order;
+}
+
+export interface JustTracking {
+	phone: string;
+	order_no: string;
 }
