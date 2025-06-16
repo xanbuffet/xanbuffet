@@ -322,14 +322,14 @@ const onAuthSubmit = () => {
 										v-for="dish in dishesOfSet[activeSet]"
 										:key="dish.id"
 									>
-										<UCard :ui="{ body: 'relative flex flex-col flex-1 gap-y-2 md:gap-y-4 p-0 sm:p-0 rounded-lg' }">
+										<UCard :ui="{ body: 'relative flex flex-col flex-1 gap-y-2 md:gap-y-4 p-0 sm:p-0 rounded-lg rounded-t-full' }">
 											<NuxtImg
-												placeholder
+												placeholder="/images/xan_dish404.webp"
 												:src="dish.image"
 												preload
 												loading="lazy"
 												fit="cover"
-												class="rounded-t-lg"
+												class="aspect-square object-cover rounded-full"
 											/>
 											<div class="min-h-12 shrink px-2 flex-1 md:font-semibold">
 												{{ dish.name }}
