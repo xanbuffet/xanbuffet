@@ -22,6 +22,7 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 		icon: "i-lucide-shopping-cart",
 		to: "/order",
 		onSelect: () => open.value = false,
+		slot: "order" as const,
 	},
 	{
 		label: "Địa chỉ",
@@ -91,13 +92,51 @@ const openUserMenu = ref<boolean>(false);
 			</div>
 			<div class="hidden lg:flex">
 				<UNavigationMenu
+					highlight
 					:items="navMenuItems"
 					variant="link"
 					:ui="{
 						list: 'flex gap-x-1.5 justify-center',
 					}"
 					class="w-full justify-center"
-				/>
+				>
+					<template #order="{ item }: { item: NavigationMenuItem }">
+						<div class="group relative p-1.5 text-sm/6 text-sky-800 dark:text-sky-300">
+							<span class="absolute inset-0 border border-dashed border-sky-300/60 bg-sky-400/10 group-hover:bg-sky-400/15 dark:border-sky-300/30" />
+							<div class="flex items-center justify-center gap-1.5">
+								<UIcon
+									:name="item.icon ?? ''"
+									class="shrink-0 size-5"
+								/>
+								{{ item.label }}
+							</div>
+							<svg
+								viewBox="0 0 5 5"
+								class="w-[5px] h-[5px] absolute top-[-2px] left-[-2px] fill-sky-300 dark:fill-sky-300/50"
+							>
+								<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+							</svg>
+							<svg
+								viewBox="0 0 5 5"
+								class="w-[5px] h-[5px] absolute top-[-2px] right-[-2px] fill-sky-300 dark:fill-sky-300/50"
+							>
+								<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+							</svg>
+							<svg
+								viewBox="0 0 5 5"
+								class="w-[5px] h-[5px] absolute bottom-[-2px] left-[-2px] fill-sky-300 dark:fill-sky-300/50"
+							>
+								<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+							</svg>
+							<svg
+								viewBox="0 0 5 5"
+								class="w-[5px] h-[5px] absolute right-[-2px] bottom-[-2px] fill-sky-300 dark:fill-sky-300/50"
+							>
+								<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+							</svg>
+						</div>
+					</template>
+				</UNavigationMenu>
 			</div>
 			<div class="flex items-center justify-end lg:flex-1 gap-2">
 				<UDropdownMenu
@@ -155,7 +194,44 @@ const openUserMenu = ref<boolean>(false);
 						:ui="{
 							list: 'flex flex-col gap-y-2 justify-center',
 						}"
-					/>
+					>
+						<template #order="{ item }: { item: NavigationMenuItem }">
+							<div class="group relative p-1.5 text-sm/6 text-sky-800 dark:text-sky-300">
+								<span class="absolute inset-0 border border-dashed border-sky-300/60 bg-sky-400/10 group-hover:bg-sky-400/15 dark:border-sky-300/30" />
+								<div class="flex items-center justify-center gap-1.5">
+									<UIcon
+										:name="item.icon ?? ''"
+										class="shrink-0 size-5"
+									/>
+									{{ item.label }}
+								</div>
+								<svg
+									viewBox="0 0 5 5"
+									class="w-[5px] h-[5px] absolute top-[-2px] left-[-2px] fill-sky-300 dark:fill-sky-300/50"
+								>
+									<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+								</svg>
+								<svg
+									viewBox="0 0 5 5"
+									class="w-[5px] h-[5px] absolute top-[-2px] right-[-2px] fill-sky-300 dark:fill-sky-300/50"
+								>
+									<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+								</svg>
+								<svg
+									viewBox="0 0 5 5"
+									class="w-[5px] h-[5px] absolute bottom-[-2px] left-[-2px] fill-sky-300 dark:fill-sky-300/50"
+								>
+									<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+								</svg>
+								<svg
+									viewBox="0 0 5 5"
+									class="w-[5px] h-[5px] absolute right-[-2px] bottom-[-2px] fill-sky-300 dark:fill-sky-300/50"
+								>
+									<path d="M2 0h1v2h2v1h-2v2h-1v-2h-2v-1h2z" />
+								</svg>
+							</div>
+						</template>
+					</UNavigationMenu>
 				</template>
 			</USlideover>
 		</nav>
