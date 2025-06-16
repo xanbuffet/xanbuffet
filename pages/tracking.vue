@@ -21,23 +21,18 @@ const onTracking = async () => {
 	try {
 		orderStore.tracking = { phone: form.value.username ?? "", order_no: form.value.order_no ?? "" };
 
-		await useFetch("/sanctum/csrf-cookie", {
+		await $fetch("/sanctum/csrf-cookie", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 		});
-		const { data, error } = await useFetch<TrackingOrderResponse>("/api/tracking", {
+		const response = await $fetch<TrackingOrderResponse>("/api/tracking", {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
-		});
+		}).catch(err => message.value = err.data.message || "Đã có lỗi xảy ra");
 
-		if (error.value) {
-			message.value = error.value.data?.message || "Đã có lỗi xảy ra";
-			return;
-		}
-
-		if (data.value) {
-			order.value = data.value.data;
-			message.value = data.value.message;
+		if (response) {
+			order.value = response.data;
+			message.value = response.message;
 		}
 	}
 	catch (err) {

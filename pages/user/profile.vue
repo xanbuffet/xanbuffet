@@ -52,29 +52,27 @@ const onUpdateInfo = async () => {
 	}
 	isLoading.value = true;
 	try {
-		const { data, error } = await useFetch<AuthResponse>(`/api/users/${user.userUsername}`, {
+		const response = await $fetch<AuthResponse>(`/api/users/${user.userUsername}`, {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: userInfoForm.value,
 			credentials: "include",
-		});
-
-		if (data.value?.data) {
-			user.setUser(data.value.data);
-			toast.add({
-				title: data.value.message,
-				color: "success",
-			});
-		}
-
-		if (error.value) {
+		}).catch((err) => {
 			toast.add({
 				title: "Oh! Cập nhật thất bại",
-				description: error.value.data?.message || "Đã có lỗi xảy ra",
+				description: err.data.message || "Đã có lỗi xảy ra",
 				color: "error",
 			});
 			return;
+		});
+
+		if (response) {
+			user.setUser(response.data);
+			toast.add({
+				title: response.message,
+				color: "success",
+			});
 		}
 	}
 	catch (err) {
@@ -93,33 +91,31 @@ const onUpdateInfo = async () => {
 const onUpdatePassword = async () => {
 	isLoading.value = true;
 	try {
-		const { data, error } = await useFetch<{ message: string }>(`/api/users/${user.userUsername}/password_change`, {
+		const response = await $fetch<{ message: string }>(`/api/users/${user.userUsername}/password_change`, {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: userPwForm.value,
 			credentials: "include",
+		}).catch((err) => {
+			toast.add({
+				title: "Oh! Cập nhật thất bại",
+				description: err.data.message || "Đã có lỗi xảy ra",
+				color: "error",
+			});
+			return;
 		});
 
-		if (data.value) {
+		if (response) {
 			userPwForm.value = {
 				current_password: "",
 				new_password: "",
 				new_password_confirmation: "",
 			};
 			toast.add({
-				title: data.value.message,
+				title: response.message,
 				color: "success",
 			});
-		}
-
-		if (error.value) {
-			toast.add({
-				title: "Oh! Cập nhật thất bại",
-				description: error.value.data?.message || "Đã có lỗi xảy ra",
-				color: "error",
-			});
-			return;
 		}
 	}
 	catch (err) {

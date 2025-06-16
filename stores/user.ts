@@ -17,7 +17,7 @@ export const useUserStore = defineStore("user", {
 		},
 		async initCsrf() {
 			try {
-				await useFetch("/sanctum/csrf-cookie", {
+				await $fetch("/sanctum/csrf-cookie", {
 					baseURL: useRuntimeConfig().public.apiBaseUrl,
 					credentials: "include",
 				});
@@ -53,7 +53,7 @@ export const useUserStore = defineStore("user", {
 		},
 		async logout() {
 			try {
-				await useFetch("/api/logout", {
+				await $fetch("/api/logout", {
 					baseURL: useRuntimeConfig().public.apiBaseUrl,
 					method: "POST",
 					credentials: "include",

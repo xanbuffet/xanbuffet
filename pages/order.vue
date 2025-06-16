@@ -14,7 +14,7 @@ const isSubmitting = ref(false);
 const isOderSuccess = ref(false);
 const orderCopied = ref(false);
 
-const steps: StepperItem[] = [
+const steps = [
 	{
 		slot: "shopping" as const,
 		title: "Chọn món",
@@ -30,7 +30,7 @@ const steps: StepperItem[] = [
 		title: "Xác nhận",
 		icon: "i-lucide-check-circle",
 	},
-];
+] satisfies StepperItem[];
 const checkoutModeTabs = [
 	{
 		value: "0",
@@ -216,30 +216,28 @@ const onOrderSubmit = async () => {
 	isSubmitting.value = true;
 	isOderSuccess.value = false;
 	try {
-		const { data, error } = await useFetch<PlacedOrderResponse>("/api/orders", {
+		const response = await $fetch<PlacedOrderResponse>("/api/orders", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: order.value,
 			credentials: "include",
+		}).catch((err) => {
+			toast.add({
+				title: "Uh oh! Có lỗi xảy ra.",
+				description: err.data.message || "Đã có lỗi xảy ra",
+				icon: "i-lucide-wifi",
+				color: "error",
+			});
+			return;
 		});
-		if (data.value) {
-			orderRes.value = data.value.data;
+		if (response) {
+			orderRes.value = response.data;
 			isOderSuccess.value = true;
 			orderStore.setTracking({
 				phone: orderRes.value.user?.username || orderRes.value.guest_phone || "",
 				order_no: orderRes.value.order_no,
 			});
-		}
-
-		if (error.value) {
-			toast.add({
-				title: "Uh oh! Có lỗi xảy ra.",
-				description: error.value.data?.message || "Đã có lỗi xảy ra",
-				icon: "i-lucide-wifi",
-				color: "error",
-			});
-			return;
 		}
 	}
 	catch (err) {

@@ -38,30 +38,22 @@ const onSignup = async (): Promise<void> => {
 	isisLoading.value = true;
 	errorMsg.value = "";
 	try {
-		await useFetch("/sanctum/csrf-cookie", {
+		await $fetch("/sanctum/csrf-cookie", {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
 		});
-		const { data, error } = await useFetch<AuthResponse>("/api/register", {
+		const response = await $fetch<AuthResponse>("/api/register", {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
-		});
+		}).catch(err => errorMsg.value = err.data.message || "Đã có lỗi xảy ra");
 
-		if (data.value) {
-			user.setUser(data.value.data);
-
+		if (response) {
+			user.setUser(response.data);
 			auth.isVisible = false;
-
 			refreshCookie("xan_buffet_session");
-
 			await navigateTo(props.redirectUrl ?? "/");
-		}
-
-		if (error.value) {
-			errorMsg.value = error.value.data?.message || "Đã có lỗi xảy ra";
-			return;
 		}
 	}
 	catch (err) {
