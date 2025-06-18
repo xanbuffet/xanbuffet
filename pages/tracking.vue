@@ -28,7 +28,10 @@ const onTracking = async () => {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
-		}).catch(err => message.value = err.data.message || "Đã có lỗi xảy ra");
+		}).catch((err) => {
+			message.value = err.data.message || "Đã có lỗi xảy ra";
+			return;
+		});
 
 		if (response) {
 			order.value = response.data;

@@ -47,7 +47,10 @@ const onSignup = async (): Promise<void> => {
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
-		}).catch(err => errorMsg.value = err.data.message || "Đã có lỗi xảy ra");
+		}).catch((err) => {
+			errorMsg.value = err.data.message || "Đã có lỗi xảy ra";
+			return;
+		});
 
 		if (response) {
 			user.setUser(response.data);

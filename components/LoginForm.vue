@@ -32,12 +32,15 @@ const onLogin = async (): Promise<void> => {
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
 		});
-		const response = await $fetch<AuthResponse>("/api/login1", {
+		const response = await $fetch<AuthResponse>("/api/login", {
 			method: "POST",
 			body: form.value,
 			baseURL: useRuntimeConfig().public.apiBaseUrl,
 			credentials: "include",
-		}).catch(err => errorMsg.value = err.data.message || "Đã có lỗi xảy ra");
+		}).catch((err) => {
+			errorMsg.value = err.data.message || "Đã có lỗi xảy ra";
+			return;
+		});
 
 		if (response) {
 			user.setUser(response.data);
