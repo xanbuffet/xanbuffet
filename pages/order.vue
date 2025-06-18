@@ -720,7 +720,7 @@ const onAuthSubmit = () => {
 							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
 						</div>
 						<UButton
-							:disabled="isSubmitting || isOderSuccess || !menu.isLoading"
+							:disabled="isSubmitting || isOderSuccess || menu.isLoading"
 							trailing-icon="i-lucide-arrow-right"
 							@click="onNextStep"
 						>
