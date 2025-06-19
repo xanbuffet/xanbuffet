@@ -1,14 +1,31 @@
 <script setup lang="ts">
-interface AddressType {
-	lable: string;
-	address: string;
-	iframe: string;
-	direct: string;
-	share: string;
-}
+import type { AddressType } from "@/types/common";
+
+useHead({
+	title: "Địa chỉ",
+	meta: [
+		{
+			name: "description",
+			content: "Tìm địa chỉ Xan Buffet gần bạn! Thưởng thức cơm nhà ngon miệng giá 35k tại các quán buffet ở Hà Nội.",
+		},
+		{
+			name: "keywords",
+			content: "chi nhánh Xan Buffet, địa chỉ Xan Buffet, quán buffet 35k, buffet Hà Nội, cơm nhà giá rẻ",
+		},
+		{ property: "og:title", content: "Địa chỉ - Xan Buffet cơm nhà 35k" },
+		{
+			property: "og:description",
+			content: "Khám phá các chi nhánh Xan Buffet tại Hà Nội. Cơm nhà ngon, giá chỉ 35k, không gian ấm cúng!",
+		},
+		{ property: "og:type", content: "website" },
+		{ property: "og:url", content: "https://xanbuffet.com/address" },
+		{ property: "og:image", content: "/images/logo.jpg" },
+	],
+});
+
 const items = ref<AddressType[]>([
 	{
-		lable: "Cầu Giấy",
+		label: "Cầu Giấy",
 		address: "Số 4, ngõ 27 Phan Văn Trường",
 		iframe: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7448.065095054483!2d105.78105045115794!3d21.031383656460584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135abee1ed9a66b%3A0x16c14d8bbb9df35c!2sXan%20-%20Buffet%20c%C6%A1m%20nh%C3%A0%2035K!5e0!3m2!1sen!2smy!4v1750081683717!5m2!1sen!2smy",
 		direct: "https://maps.app.goo.gl/7TEsoYXELbDuxeYMA",
@@ -54,7 +71,7 @@ const onChangeMap = (url: string) => {
 						>
 						<div class="flex-1 pl-2 md:p-3.5 border-l border-inverted/20 border-dashed md:border-none">
 							<h3 class="font-semibold">
-								{{ item.lable }}
+								{{ item.label }}
 							</h3>
 							<p>{{ item.address }}</p>
 						</div>

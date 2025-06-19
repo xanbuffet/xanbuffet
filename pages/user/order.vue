@@ -2,6 +2,10 @@
 import type { TabsItem } from "@nuxt/ui";
 import type { Order } from "@/types/common";
 
+useHead({
+	title: "Đơn hàng của bạn",
+});
+
 definePageMeta({
 	middleware: ["auth"],
 });

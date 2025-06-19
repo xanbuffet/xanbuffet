@@ -4,6 +4,19 @@ export default defineNuxtConfig({
 
 	devtools: { enabled: false },
 
+	app: {
+		head: {
+			title: "Xan Buffet - Buffet cơm nhà 35k",
+			titleTemplate: "%s - Xan Buffet cơm nhà 35k",
+			htmlAttrs: {
+				lang: "vi",
+			},
+			link: [
+				{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+			],
+		},
+	},
+
 	css: ["~/assets/css/main.css"],
 
 	runtimeConfig: {

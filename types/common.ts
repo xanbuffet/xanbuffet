@@ -106,3 +106,11 @@ export interface JustTracking {
 	phone: string;
 	order_no: string;
 }
+
+export interface AddressType {
+	label: string;
+	address: string;
+	iframe: string;
+	direct: string;
+	share: string;
+}

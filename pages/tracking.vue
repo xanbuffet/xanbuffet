@@ -2,6 +2,28 @@
 import { z } from "zod";
 import type { TrackingOrderResponse, Order } from "@/types/common";
 
+useHead({
+	title: "Theo dõi đơn hàng",
+	meta: [
+		{
+			name: "description",
+			content: "Theo dõi đơn hàng tại Xan Buffet - Nhập mã đơn hàng để kiểm tra trạng thái giao hàng cơm nhà 35k nhanh chóng!",
+		},
+		{
+			name: "keywords",
+			content: "theo dõi đơn hàng Xan Buffet, kiểm tra trạng thái đơn hàng, buffet 35k, đặt cơm online, Xan Buffet Hà Nội",
+		},
+		{ property: "og:title", content: "Theo dõi đơn hàng - Xan Buffet cơm nhà 35k" },
+		{
+			property: "og:description",
+			content: "Nhập mã đơn hàng để theo dõi trạng thái giao hàng tại Xan Buffet. Cơm nhà ngon, giá chỉ 35k!",
+		},
+		{ property: "og:type", content: "website" },
+		{ property: "og:url", content: "https://xanbuffet.com/tracking" },
+		{ property: "og:image", content: "/images/logo.jpg" },
+	],
+});
+
 const orderStore = useOrderStore();
 
 const schema = z.object({

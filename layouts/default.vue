@@ -1,3 +1,9 @@
+<script setup>
+import { useFloatingBox } from "~/composables/useFloatingBox";
+
+const { isFloatingBoxVisible } = useFloatingBox();
+</script>
+
 <template>
 	<div class="flex flex-col min-h-screen relative">
 		<Header />
@@ -13,9 +19,3 @@
 		<NuxtRouteAnnouncer />
 	</div>
 </template>
-
-<script setup>
-import { useFloatingBox } from "~/composables/useFloatingBox";
-
-const { isFloatingBoxVisible } = useFloatingBox();
-</script>

@@ -1,4 +1,26 @@
-<script setup></script>
+<script setup>
+useHead({
+	title: "Trang chủ",
+	meta: [
+		{
+			name: "description",
+			content: "Xan Buffet - Thưởng thức cơm nhà ngon miệng chỉ với 35k. Đa dạng món ăn, không gian ấm cúng, giá cả hợp lý!",
+		},
+		{
+			name: "keywords",
+			content: "Xan Buffet, cơm buffet 35k, quán cơm giá rẻ, buffet Hà Nội, cơm nhà ngon",
+		},
+		{ property: "og:title", content: "Xan Buffet - Cơm nhà 35k" },
+		{
+			property: "og:description",
+			content: "Thưởng thức cơm nhà ngon miệng tại Xan Buffet với giá chỉ 35k. Đa dạng món ăn, không gian thân thiện!",
+		},
+		{ property: "og:type", content: "website" },
+		{ property: "og:url", content: "https://xanbuffet.com" },
+		{ property: "og:image", content: "/images/logo.jpg" },
+	],
+});
+</script>
 
 <template>
 	<div>

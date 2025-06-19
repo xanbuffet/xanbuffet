@@ -2,6 +2,9 @@
 import { z } from "zod";
 import type { AuthResponse } from "@/types/common";
 
+useHead({
+	title: "Thông tin cá nhân",
+});
 definePageMeta({
 	middleware: ["auth"],
 });
