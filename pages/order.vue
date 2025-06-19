@@ -4,6 +4,28 @@ import type { StepperItem, TabsItem } from "@nuxt/ui";
 import type { Dish, SimpleTab, OrderPayload, Order, PlacedOrderResponse } from "@/types/common";
 import { useCopy } from "~/composables/useCopy";
 
+useHead({
+	title: "Đặt hàng",
+	meta: [
+		{
+			name: "description",
+			content: "Đặt hàng tại Xan Buffet - Xem menu cơm nhà ngon miệng giá 35k mỗi ngày. Đa dạng món ăn, đặt nhanh, giao tận nơi!",
+		},
+		{
+			name: "keywords",
+			content: "đặt hàng Xan Buffet, menu buffet 35k, cơm nhà giá rẻ, buffet Hà Nội, đặt cơm online",
+		},
+		{ property: "og:title", content: "Đặt hàng - Xan Buffet cơm nhà 35k" },
+		{
+			property: "og:description",
+			content: "Xem menu ngày và đặt cơm nhà ngon tại Xan Buffet chỉ 35k. Đặt hàng nhanh chóng, giao hàng tận nơi!",
+		},
+		{ property: "og:type", content: "website" },
+		{ property: "og:url", content: "https://xanbuffet.com/order" },
+		{ property: "og:image", content: "/images/logo.jpg" },
+	],
+});
+
 const { copyText } = useCopy();
 const auth = useAuthStore();
 const user = useUserStore();
@@ -171,6 +193,9 @@ const onSelectDish = (dish: Dish, set: number | string | undefined) => {
 	}
 
 	selectedDishesOfSet.value[set] = [...selected];
+};
+const canNextStep = (): boolean => {
+	return isSubmitting.value || isOderSuccess.value || menu.isLoading || menu.getError !== null;
 };
 const onNextStep = async () => {
 	if (stepper.value?.hasNext && activeStep.value === 0) {
@@ -720,7 +745,7 @@ const onAuthSubmit = () => {
 							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
 						</div>
 						<UButton
-							:disabled="isSubmitting || isOderSuccess || menu.isLoading"
+							:disabled="canNextStep"
 							trailing-icon="i-lucide-arrow-right"
 							@click="onNextStep"
 						>
