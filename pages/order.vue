@@ -195,7 +195,17 @@ const onSelectDish = (dish: Dish, set: number | string | undefined) => {
 	selectedDishesOfSet.value[set] = [...selected];
 };
 const canNextStep = (): boolean => {
-	return isSubmitting.value || isOderSuccess.value || menu.isLoading || menu.getError !== null;
+	if (activeStep.value === 0) {
+		if (menu.isLoading || menu.getError !== null) {
+			return true;
+		}
+	}
+	else if (activeStep.value === 2) {
+		if (isSubmitting.value || isOderSuccess.value) {
+			return true;
+		}
+	}
+	return false;
 };
 const onNextStep = async () => {
 	if (stepper.value?.hasNext && activeStep.value === 0) {
@@ -212,6 +222,8 @@ const onNextStep = async () => {
 
 		stepper.value.next();
 		window.scrollTo({ top: 0, behavior: "smooth" });
+		const scrollableElement = document.getElementById("contentSection");
+		scrollableElement?.scrollTo({ top: 0, behavior: "smooth" });
 	}
 	else if (stepper.value?.hasNext && activeStep.value === 1) {
 		if (checkoutMode.value == "1" && !user.isAuthenticated) {
@@ -231,6 +243,8 @@ const onNextStep = async () => {
 			});
 			stepper.value.next();
 			window.scrollTo({ top: 0, behavior: "smooth" });
+			const scrollableElement = document.getElementById("contentSection");
+			scrollableElement?.scrollTo({ top: 0, behavior: "smooth" });
 		}
 	}
 	else if (activeStep.value === 2) {
@@ -289,7 +303,10 @@ const onAuthSubmit = () => {
 <template>
 	<div class="isolate relative overflow-hidden">
 		<div class="w-full max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-10">
-			<section class="my-5 lg:my-8">
+			<section
+				id="contentSection"
+				class="my-5 lg:my-8"
+			>
 				<UStepper
 					ref="stepper"
 					v-model="activeStep"
@@ -745,7 +762,7 @@ const onAuthSubmit = () => {
 							<p>{{ selectedDishesOfSet[activeSet]?.length || 0 }} món</p>
 						</div>
 						<UButton
-							:disabled="canNextStep"
+							:disabled="canNextStep()"
 							trailing-icon="i-lucide-arrow-right"
 							@click="onNextStep"
 						>
