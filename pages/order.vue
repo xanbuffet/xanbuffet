@@ -222,8 +222,6 @@ const onNextStep = async () => {
 
 		stepper.value.next();
 		window.scrollTo({ top: 0, behavior: "smooth" });
-		const scrollableElement = document.getElementById("contentSection");
-		scrollableElement?.scrollTo({ top: 0, behavior: "smooth" });
 	}
 	else if (stepper.value?.hasNext && activeStep.value === 1) {
 		if (checkoutMode.value == "1" && !user.isAuthenticated) {
@@ -243,8 +241,6 @@ const onNextStep = async () => {
 			});
 			stepper.value.next();
 			window.scrollTo({ top: 0, behavior: "smooth" });
-			const scrollableElement = document.getElementById("contentSection");
-			scrollableElement?.scrollTo({ top: 0, behavior: "smooth" });
 		}
 	}
 	else if (activeStep.value === 2) {

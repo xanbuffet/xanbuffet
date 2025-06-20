@@ -15,6 +15,7 @@ const { isFloatingBoxVisible } = useFloatingBox();
 		<FloatingBox v-if="isFloatingBoxVisible" />
 		<Authentication />
 
+		<ScrollTop />
 		<Footer />
 		<NuxtRouteAnnouncer />
 	</div>
