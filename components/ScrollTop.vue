@@ -27,7 +27,7 @@ onUnmounted(() => {
 		icon="i-heroicons-arrow-up"
 		color="neutral"
 		variant="solid"
-		class="fixed bottom-6 right-6 z-50 rounded-full"
+		class="fixed bottom-20 right-6 z-50 rounded-full"
 		aria-label="Scroll to top"
 		@click="scrollToTop"
 	/>
