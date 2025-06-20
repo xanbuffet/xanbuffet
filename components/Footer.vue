@@ -13,10 +13,11 @@
 					to="/"
 					class="inline-flex items-center gap-2"
 				>
-					XAN LOGO
+					<p class="font-bold text-xl md:text-2xl text-primary pr-5 animate-typing overflow-hidden whitespace-nowrap">Xan Buffet</p>
 				</NuxtLink>
 				<p class="mt-4 text-sm text-gray-700 xl:max-w-md">
-					Website description
+					Buffet cơm nhà ăn thả ga chỉ với 35k<br>
+					Xan cơm nhà - Xan cơm bình dân
 				</p>
 			</div>
 			<div class="w-3/7 lg:w-auto">
@@ -67,14 +68,14 @@
 						Grab Food
 					</ULink>
 					<ULink
-						to="/address"
+						to="/order"
 						class="py-1.5 block hover:text-primary"
 						inactive-class="text-default"
 					>
 						Bee Food
 					</ULink>
 					<ULink
-						to="/address"
+						to="/order"
 						class="py-1.5 block hover:text-primary"
 						inactive-class="text-default"
 					>
@@ -88,21 +89,21 @@
 				</div>
 				<div class="text-sm">
 					<ULink
-						to="/about"
+						to="https://zalo.me/0927733111"
 						class="py-1.5 block hover:text-primary"
 						inactive-class="text-default"
 					>
 						Zalo
 					</ULink>
 					<ULink
-						to="/about"
+						to="https://www.facebook.com/share/12Kvqw56LZ2"
 						class="py-1.5 block hover:text-primary"
 						inactive-class="text-default"
 					>
 						Messenger
 					</ULink>
 					<ULink
-						to="/about"
+						to="https://tiktok.com/@xanbuffetcomnha35k"
 						class="py-1.5 block hover:text-primary"
 						inactive-class="text-default"
 					>
@@ -115,14 +116,14 @@
 	<div class="w-full max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-4 lg:flex lg:items-center lg:justify-between lg:gap-x-3">
 		<div class="lg:flex-1 flex items-center justify-center lg:justify-end gap-x-3 lg:order-3">
 			<UButton
-				to="https://facebook.com/"
+				to="https://www.facebook.com/share/12Kvqw56LZ2"
 				icon="i-logos-facebook"
 				target="_blank"
 				variant="outline"
 				aria-label="Facebook"
 			/>
 			<UButton
-				to="#"
+				to="https://tiktok.com/@xanbuffetcomnha35k"
 				target="_blank"
 				icon="i-logos-tiktok-icon"
 				aria-label="TikTok"
@@ -130,7 +131,7 @@
 				variant="outline"
 			/>
 			<UButton
-				to="#"
+				to="https://zalo.me/0927733111"
 				target="_blank"
 				icon="i-simple-icons-zalo"
 				color="info"

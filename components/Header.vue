@@ -56,7 +56,7 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 			{
 				label: "Facebook",
 				icon: "i-logos-facebook",
-				to: "https://facebook.com/@xanbuffetcomnha35k",
+				to: "https://www.facebook.com/share/12Kvqw56LZ2",
 				target: "_blank",
 			},
 		],
@@ -88,7 +88,9 @@ const openUserMenu = ref<boolean>(false);
 	<header class="bg-default/75 backdrop-blur border-b border-default h-(--ui-header-height) sticky top-0 z-50">
 		<nav class="w-full max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 h-full">
 			<div class="lg:flex-1 flex items-center gap-1.5">
-				<NuxtLink to="/">Xan Buffet</NuxtLink>
+				<NuxtLink to="/">
+					<p class="font-bold text-xl md:text-2xl text-primary">Xan Buffet</p>
+				</NuxtLink>
 			</div>
 			<div class="hidden lg:flex">
 				<UNavigationMenu
